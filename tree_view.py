@@ -87,7 +87,7 @@ class TreeViewlist:
                      troughcolor='white', bordercolor="black", lightcolor="black", darkcolor="black")
         time.sleep (0.1)
         self.progress_bar = Progressbar (self.frame, style="red.Horizontal.TProgressbar",
-                                         orient="horizontal", length=6, mode="determinate", )
+                                         orient="horizontal", length=7, mode="determinate", )
         self.progress_bar.place (x=event.x, y=event.y + 10, width=60, height=13)
         self.progress_bar.start (4)
 

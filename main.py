@@ -139,7 +139,8 @@ item_left_text = ""
 def listar_left(event):
     global item_left_text
     item_left = left_frame_list.tree.selection ()[0]  # Identificamos el item que a sido doble clickeado
-    item_left_text = left_frame_list.tree.item (item_left, "text")  # Extraemos el texto que poseee ese item
+    item_left_text = left_frame_list.tree.item (item_left, "text") + left_frame_list.tree.item (item_left, "values")[
+        0]  # Extraemos el texto que poseee ese item
     if item_left_text == "":
         return
     path = vars.actual_left_path + "/" + item_left_text  # calculamos su path
@@ -216,7 +217,8 @@ b_new_folder.grid (row=0, column=3, sticky='nsew', rowspan=2)
 def listar_right(event):
     global item_right_text
     item_right = right_frame_list.tree.selection ()[0]  # Identificamos el item que a sido doble clickeado
-    item_right_text = right_frame_list.tree.item (item_right, "text")  # Extraemos el texto que posee ese item
+    item_right_text = right_frame_list.tree.item (item_right, "text") + \
+                      right_frame_list.tree.item (item_right, "values")[0]  # Extraemos el texto que posee ese item
     if item_right_text == "":
         return
     path = vars.actual_right_path + "/" + item_right_text  # calculamos su path
@@ -325,7 +327,7 @@ image_array.insert (2, PIL.ImageTk.PhotoImage
 image_array.insert (3, PIL.ImageTk.PhotoImage
 (PIL.Image.open ("resources/propiedades.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
 
-
+program_icon_array = []
 def start_m(event, frame, actual):
     """
     this function starts the frame context menus
@@ -350,10 +352,10 @@ def start_m(event, frame, actual):
         full_name = name + ext
         mime = magic.Magic (mime=True)
         path = os.path.join (actual, full_name)
-        mime = mime.from_file (path)
         if os.path.isdir (path):
             menu.add_command (label="Abrir carpeta")
         else:
+            mime = mime.from_file (path)
             open_with = Menu (menu, tearoff=False, bd=9, relief=FLAT, activeforeground="green",
                               bg=vars.dark_gray, fg="white", activebackground=vars.dark_gray)
 
@@ -368,8 +370,9 @@ def start_m(event, frame, actual):
                     path_list.append (Gio.File.new_for_path (_path))
                 program.launch (path_list)
 
-            l = Gio.app_info_get_all_for_type (mime)
-            for app in l:
+            l = Gio.app_info_get_recommended_for_type (mime)
+            for e in range (len (l)):
+                app = l[e]
                 icon = app.get_icon ()
                 icon_theme = Gtk.IconTheme.get_default ()
                 icon_file = icon_theme.lookup_icon (icon.to_string (), 32, 0)
@@ -377,14 +380,22 @@ def start_m(event, frame, actual):
                 if icon_file != None:
                     final_filename = icon_file.get_filename ()
 
-                file = open (final_filename)
-                png = cairosvg.svg2png (file)
-                pil_img = PIL.Image.open (io.BytesIO (png))
-                pg = ImageTk.PhotoImage (pil_img)
-                open_with.add_command (image=pg, label=app.get_name (),
+                try:
+                    png = cairosvg.svg2png (url=final_filename)
+                    pil_img = PIL.Image.open (io.BytesIO (png))
+                    res_pil = pil_img.resize ((30, 30), PIL.Image.ANTIALIAS)
+                    pg = ImageTk.PhotoImage (res_pil)
+                    program_icon_array.insert (e, pg)
+                except:
+                    print ("error", final_filename)
+                open_with.add_command (image=program_icon_array[e], compound="left", label=app.get_name (),
                                        command=lambda program=app: launch_program (program))
-            giofile = Gio.File.new_for_path (path)
-            menu.add_command (image=image, compound="left", label="Abrir archivo")
+            default = Gio.app_info_get_default_for_type (mime, False)
+            image_new = PIL.Image.new ('RGBA', (30, 30))
+            image_new = ImageTk.PhotoImage (image_new)
+            open_with.add_command (image=image_new, compound="left", label="Abri con otro programa")
+            menu.add_command (image=image, compound="left", label="Abrir archivo",
+                              command=lambda default=default: launch_program (default))
             menu.add_separator ()
             menu.add_cascade (label="Abrir con", menu=open_with)
             menu.add_separator ()
@@ -549,8 +560,9 @@ photo = []
 photo.append (ImageTk.PhotoImage (img_disk))
 photo.append (ImageTk.PhotoImage (img_usb))
 list_drives (photo)
-left_path.bind ("<Double-1>", edit_left)
+
 left_frame_list.double_click (listar_left)  # Aniadimos la funcion
+left_path.bind ("<Double-1>", edit_left)
 left_frame_list.click (change_left)
 left_frame_list.f2 (file_manipulation.f2)
 left_frame_list.tab (tab)

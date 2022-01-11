@@ -1,6 +1,9 @@
 import os.path
 from pathlib import Path
 
+import magic
+from gi.repository import Gio
+
 import vars
 from get_file_icon import Load_Thumb
 from list_files import ListFiles
@@ -68,4 +71,8 @@ class Listar:
             return False
 
     def read_file(self, path):
-        print (path + " Is a file")
+        mime = magic.Magic (mime=True)
+        mime = mime.from_file (path)
+        l = Gio.app_info_get_default_for_type (mime, False)
+        file = Gio.File.new_for_path (path)
+        l.launch ([file])
