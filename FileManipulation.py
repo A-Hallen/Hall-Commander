@@ -1,14 +1,15 @@
 import errno
 import os
-from pathlib import Path
 from tkinter import Entry
 
 import vars
 from MyDialog import CustomDialog, YesOrNoDialog, EliminarDialog, CopyDialog
+from actualizar import Actualizar
 
 
 class FileManipulation:
-    def __init__(self, left_frame_list, right_frame_list, listar_l, listar_r, left_path, right_path, root):
+    def __init__(self, left_frame_list, right_frame_list, listar_l, listar_r, left_path, right_path, root,
+                 update: Actualizar):
         self.left_path = left_path
         self.right_path = right_path
         self.listar_l = listar_l
@@ -16,6 +17,7 @@ class FileManipulation:
         self.left_frame_list = left_frame_list
         self.right_frame_list = right_frame_list
         self.root = root
+        self.update = update
         pass
 
     def getsize(self, path):
@@ -28,14 +30,6 @@ class FileManipulation:
             return str (round (bytes / 1048576)) + "Mb"
         elif bytes <= 1099511627776:
             return str (round (bytes / 1073741824)) + "Gb"
-
-    def actualizar(self, left=True):
-        if left:
-            name = Path (vars.actual_left_path).name
-            self.listar_l.listar (self.left_path, name, vars.actual_left_path)
-        else:
-            name = Path (vars.actual_right_path).name
-            self.listar_r.listar (self.right_path, name, vars.actual_right_path)
 
     # function a considerar para la accion de renombrar
 
@@ -76,13 +70,10 @@ class FileManipulation:
                 old = actualpath + "/" + text
                 new = actualpath + "/" + dialog.text
                 os.rename (old, new)
-                self.actualizar (act)
+                self.update.update ()
                 if left:
                     if vars.actual_left_path == vars.actual_right_path:
-                        if left:
-                            self.actualizar (False)
-                        else:
-                            self.actualizar (True)
+                        self.update.update ()
                 tree.focus (item)
                 for i in tree.get_children ():
                     n = tree.item (i, "text") + tree.item (i, "values")[0]
@@ -109,13 +100,7 @@ class FileManipulation:
                 else:
                     print ("El directorio ya existe")
             finally:
-                self.actualizar (left)
-                if left:
-                    if vars.actual_left_path == vars.actual_right_path:
-                        if left:
-                            self.actualizar (False)
-                        else:
-                            self.actualizar (True)
+                self.update.update ()
 
     def delete_dialog(self, event, left=True):
         if left:
@@ -134,14 +119,13 @@ class FileManipulation:
         dialog = YesOrNoDialog (self.root, text, "Eliminar", height=120, width=300)
         if dialog.answer == True:
             path = actualpath + "/" + text
-            eliminar_dialog = EliminarDialog (path, text, self.root, listar, label_path, actualpath)
+            EliminarDialog (path, text, self.root, listar, label_path, actualpath)
 
     def copy_dialog(self, event, left=True):
         if left:
             listar = self.listar_r
             label_path = self.right_path
             tree = self.left_frame_list.tree
-            tree_side = self.right_frame_list.tree
             actual = vars.actual_left_path
             destiny = vars.actual_right_path
             items = tree.selection ()
@@ -149,7 +133,6 @@ class FileManipulation:
             listar = self.listar_l
             tree = self.right_frame_list.tree
             label_path = self.left_path
-            tree_side = self.left_frame_list.tree
             actual = vars.actual_right_path
             destiny = vars.actual_left_path
             items = tree.selection ()
@@ -166,4 +149,4 @@ class FileManipulation:
                 paths = actual + "/" + tree.item (i, "text") + tree.item (i, "values")[0]
                 items_path.append (paths)
 
-            copy_dialog = CopyDialog (items_path, destiny, listar, label_path, self.root)
+            CopyDialog (items_path, destiny, listar, label_path, self.root, self.update)

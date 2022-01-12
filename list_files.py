@@ -2,6 +2,7 @@ import os
 
 from PIL import Image, ImageTk
 
+import vars
 from get_file_icon import get_file_icon
 
 
@@ -48,9 +49,15 @@ class ListFiles:
             lis = list_of_files[i]
             ipath = path + "/" + lis
             last = i
-            if os.path.isdir (ipath):
-                image = self.folder
-                lista.insert (i, (lis, "", "<DIR>", str (i), image))
+            if vars.hidden == True:
+                if not lis.startswith ("."):
+                    if os.path.isdir (ipath):
+                        image = self.folder
+                        lista.insert (i, (lis, "", "<DIR>", str (i), image))
+            else:
+                if os.path.isdir (ipath):
+                    image = self.folder
+                    lista.insert (i, (lis, "", "<DIR>", str (i), image))
 
         lista.sort ()
         listafiles = []
@@ -59,11 +66,21 @@ class ListFiles:
             ipath = path + "/" + lis
             last = i + last
             self.array.insert (i, "")
-            if os.path.isfile (ipath):
-                image = self.desconocido
-                size = self.getsize (ipath)
-                listafiles.insert (i + last,
-                                   (os.path.splitext (lis)[0], os.path.splitext (lis)[1], str (size), str (i), image))
+            if vars.hidden == True:
+                if not lis.startswith ("."):
+                    if os.path.isfile (ipath):
+                        image = self.desconocido
+                        size = self.getsize (ipath)
+                        listafiles.insert (i + last,
+                                           (os.path.splitext (lis)[0], os.path.splitext (lis)[1], str (size), str (i),
+                                            image))
+            else:
+                if os.path.isfile (ipath):
+                    image = self.desconocido
+                    size = self.getsize (ipath)
+                    listafiles.insert (i + last,
+                                       (os.path.splitext (lis)[0], os.path.splitext (lis)[1], str (size), str (i),
+                                        image))
         listafiles.sort ()
         lista.extend (listafiles)
         return lista

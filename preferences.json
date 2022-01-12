@@ -1,8 +1,10 @@
 {
-  "associations": {},
+  "hidden": [
+    true
+  ],
   "lasts_windows": {
-    "left": "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/02 DELETE/00/Screenshots",
-    "right": "/media/kali/Disco local/Users/Hallen/Downloads/Video"
+    "left": "/",
+    "right": "/home/kali/Downloads/Video"
   },
   "commands": {
     "1": [

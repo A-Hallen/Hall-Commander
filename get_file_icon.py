@@ -2,8 +2,10 @@ import os.path
 import threading
 
 import PIL
-from PIL import ImageTk, Image
+from PIL import ImageTk, Image, ImageFilter
 from moviepy.video.io.VideoFileClip import VideoFileClip
+
+import vars
 
 
 def get_file_icon(path, ext):
@@ -64,6 +66,8 @@ class Load_Thumb:
                     except PIL.UnidentifiedImageError:
                         image = Image.open ("resources/fotos.png")
 
+                    if vars.hidden == True:
+                        image.filter (ImageFilter.MinFilter (3))
                     image.thumbnail ((30, 30), Image.ANTIALIAS)
                     blank = Image.new ('RGBA', (36, 30))
                     blank.paste (image)

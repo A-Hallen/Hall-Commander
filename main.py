@@ -14,6 +14,10 @@ import psutil
 from PIL import ImageTk
 from blkinfo import BlkDiskInfo
 
+from CopyToClipBoard import CopyToClipBoard
+from MyDialog import CopyDialog
+from actualizar import Actualizar
+
 gi.require_version ('Gtk', '3.0')
 from gi.repository import Gio, Gtk
 import SearchWindow
@@ -156,11 +160,11 @@ right_thumb_thread.start ()
 # Inicializamos la clase listar para el frame derecho
 listar_r = Listar (False, right_frame_list, right_thumb_thread)
 
+actualizar = Actualizar (left_path, right_path, listar_r, listar_l)
 item_right_text = ""
-
 # =========================------------------===========================----------------------============================#|
 file_manipulation = FileManipulation (left_frame_list, right_frame_list, listar_l, listar_r, left_path, right_path,
-                                      root)  # |
+                                      root, actualizar)  # |
 
 
 # =========================------------------===========================----------------------============================#|
@@ -326,6 +330,8 @@ image_array.insert (2, PIL.ImageTk.PhotoImage
 (PIL.Image.open ("resources/copiar.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
 image_array.insert (3, PIL.ImageTk.PhotoImage
 (PIL.Image.open ("resources/propiedades.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
+image_array.insert (4, PIL.ImageTk.PhotoImage
+(PIL.Image.open ("resources/paste.ico").resize ((24, 24), PIL.Image.ANTIALIAS)))
 
 program_icon_array = []
 def start_m(event, frame, actual):
@@ -393,14 +399,34 @@ def start_m(event, frame, actual):
             default = Gio.app_info_get_default_for_type (mime, False)
             image_new = PIL.Image.new ('RGBA', (30, 30))
             image_new = ImageTk.PhotoImage (image_new)
+
+            def copiar():
+                selections = []
+                paths = tree.selection ()
+                for f in paths:
+                    item_text = tree.item (f, "text") + tree.item (f, "values")[0]
+                    selections.append (os.path.join (actual, item_text))
+
+                CopyToClipBoard ().copyfile (selections)
+
+            def pegar():
+                if vars.last_selection_left == True:
+                    copy_dialog = CopyDialog (vars.portapapeles, actual, listar_r, left_path, root, actualizar)
+                else:
+                    copy_dialog = CopyDialog (vars.portapapeles, actual, listar_l, right_path, root, actualizar)
+
             open_with.add_command (image=image_new, compound="left", label="Abri con otro programa")
             menu.add_command (image=image, compound="left", label="Abrir archivo",
                               command=lambda default=default: launch_program (default))
             menu.add_separator ()
             menu.add_cascade (label="Abrir con", menu=open_with)
             menu.add_separator ()
-            menu.add_command (image=image_array[2], compound="left", label="Copiar")
+            menu.add_command (image=image_array[2], compound="left", label="Copiar", command=copiar)
             menu.add_command (image=image_array[1], compound="left", label="Cortar")
+            if len (vars.portapapeles) == 0:
+                print ("Portapapeles vacio")
+            else:
+                menu.add_command (image=image_array[4], label="Pegar", command=pegar, compound="left")
             menu.add_command (image=image_array[0], compound="left", label="Eliminar")
             menu.add_command (image=image_array[3], compound="left", label="Propiedades")
 
@@ -662,5 +688,27 @@ foto = PIL.Image.open ("folder.png")
 image = ImageTk.PhotoImage (foto)
 root.iconphoto (True, image)
 
+
+def hidden(event):
+    preferences = open ("preferences.json", "r")
+    read = preferences.read ()
+    preferences.close ()
+    js = json.loads (read)
+    if js["hidden"][0] == False:
+        js["hidden"][0] = True
+        save = json.dumps (js, indent=4)
+        prefs = open ("preferences.json", "w")
+        prefs.write (save)
+        vars.hidden = True
+    else:
+        js["hidden"][0] = False
+        save = json.dumps (js, indent=4)
+        prefs = open ("preferences.json", "w")
+        prefs.write (save)
+        vars.hidden = False
+    actualizar.update ()
+
+
 root.bind ("<Control-F12>", f12)
+root.bind ("<Control-o>", hidden)
 root.mainloop ()

@@ -25,4 +25,7 @@ show_hiden_files = True
 actual_left_path = os.getenv ('HOME')
 actual_right_path = os.getenv ('HOME')
 
+# variable for changing the hidden state
+hidden = True
 # right click variables
+portapapeles = []

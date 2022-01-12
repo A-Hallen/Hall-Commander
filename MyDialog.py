@@ -160,7 +160,8 @@ threads = []
 
 
 class CopyDialog:
-    def __init__(self, items_path, destiny, listar, label_path, parent):
+    def __init__(self, items_path, destiny, listar, label_path, parent, actualizar):
+        self.update = actualizar
         self.top = tk.Toplevel (parent)
         self.top.title ("Copiar")
         self.top.config (padx=20, bg="black")
@@ -221,6 +222,7 @@ class CopyDialog:
                     self.copy_recursive (source=items_path[0], destiny=
                     os.path.join (destiny, Path (items_path[0]).name))
                     self.top.destroy ()
+                    self.update.update ()
 
                 ta = threading.Thread (name="recursive", target=copy_rec)
                 threads.append (ta)
@@ -240,6 +242,7 @@ class CopyDialog:
                     self.top.geometry ("400x120")
                     self.copy_with_progress (items_path[0], destiny, callback=self.copy_progress)
                     self.top.destroy ()
+                    self.update.update ()
 
                 t = threading.Thread (name="copiando", target=copiar)
                 threads.append (t)
