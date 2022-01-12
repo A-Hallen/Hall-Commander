@@ -89,9 +89,7 @@ class Load_Thumb:
                     blank = Image.new ('RGBA', (36, 30))
                     blank.paste (image)
                     if vars.hidden == False:
-                        print ("shit")
                         if name.startswith ("."):
-                            print ("video hidden " + name)
                             blank.putalpha (100)
                     imagen = ImageTk.PhotoImage (blank)
                     self.array.insert (int (item), imagen)

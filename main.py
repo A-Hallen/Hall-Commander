@@ -46,6 +46,7 @@ def start():
         vars.actual_left_path = actualleft
     if os.path.exists (actualright) and os.path.isdir (actualright):
         vars.actual_right_path = actualright
+    vars.hidden = json_read["hidden"][0]
 
 
 start ()
@@ -687,7 +688,6 @@ def f12(event):
 foto = PIL.Image.open ("folder.png")
 image = ImageTk.PhotoImage (foto)
 root.iconphoto (True, image)
-
 
 def hidden(event):
     preferences = open ("preferences.json", "r")

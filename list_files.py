@@ -19,7 +19,8 @@ class ListFiles:
         blank = Image.new ('RGBA', (36, 30))
         blank.paste (img, (0, 0, 30, 30))
         self.folder = ImageTk.PhotoImage (blank)
-
+        blank.putalpha (100)
+        self.folder_hidden = ImageTk.PhotoImage (blank)
         image = Image.open ("desconocido.png")
         img = image.resize ((30, 30), Image.ANTIALIAS)
         blank = Image.new ('RGBA', (36, 30))
@@ -56,7 +57,10 @@ class ListFiles:
                         lista.insert (i, (lis, "", "<DIR>", str (i), image))
             else:
                 if os.path.isdir (ipath):
-                    image = self.folder
+                    if lis.startswith ("."):
+                        image = self.folder_hidden
+                    else:
+                        image = self.folder
                     lista.insert (i, (lis, "", "<DIR>", str (i), image))
 
         lista.sort ()
