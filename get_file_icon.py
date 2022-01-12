@@ -2,7 +2,7 @@ import os.path
 import threading
 
 import PIL
-from PIL import ImageTk, Image, ImageFilter
+from PIL import ImageTk, Image
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
 import vars
@@ -66,8 +66,9 @@ class Load_Thumb:
                     except PIL.UnidentifiedImageError:
                         image = Image.open ("resources/fotos.png")
 
-                    if vars.hidden == True:
-                        image.filter (ImageFilter.MinFilter (3))
+                    if vars.hidden == False:
+                        if name.startswith ("."):
+                            image.putalpha (100)
                     image.thumbnail ((30, 30), Image.ANTIALIAS)
                     blank = Image.new ('RGBA', (36, 30))
                     blank.paste (image)
@@ -79,7 +80,6 @@ class Load_Thumb:
                         print ("item in exception" + item)
                 elif ext.lower () in videos:
                     clips = VideoFileClip (path)
-                    frames = clips.reader.fps
                     duration = clips.duration
                     max_duration = int (duration) + 1
                     i = max_duration // 2
@@ -88,6 +88,11 @@ class Load_Thumb:
                     image.thumbnail ((30, 30), Image.ANTIALIAS)
                     blank = Image.new ('RGBA', (36, 30))
                     blank.paste (image)
+                    if vars.hidden == False:
+                        print ("shit")
+                        if name.startswith ("."):
+                            print ("video hidden " + name)
+                            blank.putalpha (100)
                     imagen = ImageTk.PhotoImage (blank)
                     self.array.insert (int (item), imagen)
                     self.tree.item (item, image=self.array[int (item)])
