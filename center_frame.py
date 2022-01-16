@@ -43,8 +43,11 @@ class VerticalBarCommands:
             for i in range (len (self.commands)):
                 if not str (i + 1) in self.commands:
                     i = i + 1
-                if self.commands[str (i + 1)] == "":
-                    self.image_array.insert (i, "")
+                try:
+                    if self.commands[str (i + 1)] == "":
+                        self.image_array.insert (i, "")
+                        continue
+                except KeyError:
                     continue
                 e = self.commands[str (i + 1)]
                 row = e[0]
@@ -56,8 +59,8 @@ class VerticalBarCommands:
                     image = Image.open (image_path)
                 except FileNotFoundError:
                     image = Image.open ("unknown_program.png")
-                img = image.resize ((35, 35), Image.ANTIALIAS)
-                self.image_array.insert (i, ImageTk.PhotoImage (img))
+                image.thumbnail ((35, 35), Image.ANTIALIAS)
+                self.image_array.insert (i, ImageTk.PhotoImage (image))
                 item = Label (master=self.center_frame, image=self.image_array[i],
                               height=35, text=str (i + 1), width=35, bg=vars.soft_gray)
 

@@ -77,12 +77,15 @@ class VerticalBar:
     def aceptar_link(self):
         self.create_link (None)
 
-    def create_link(self, event):
+    def create_link(self, event, out=False, path=""):
         try:
-            order = self.entry.get ()
+            if out:
+                order = path
+            else:
+                order = self.entry.get ()
             image = Image.open (self.folder_path)
-            img = image.resize ((35, 35), Image.ANTIALIAS)
-            self.imagen = ImageTk.PhotoImage (img)
+            image.thumbnail ((35, 35), Image.ANTIALIAS)
+            self.imagen = ImageTk.PhotoImage (image)
             rows = self.vertical_frame.grid_size ()[1]
             item = Label (master=self.vertical_frame, image=self.imagen, height=35, width=35, text=str (rows),
                           bg=vars.soft_gray)
@@ -112,7 +115,8 @@ class VerticalBar:
         except PIL.UnidentifiedImageError:
             print ("El archivo no es una imagen valida")
         finally:
-            self.close ()
+            if not out:
+                self.close ()
 
     def create_item(self, e):
         try:
@@ -167,7 +171,6 @@ class VerticalBar:
             self.top.destroy ()
 
     def initialize(self, imagen):
-        print ("Now this function is executing some script")
         f = open ("preferences.json", "r")
         c = f.read ()
         f.close ()

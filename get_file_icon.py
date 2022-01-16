@@ -9,7 +9,7 @@ import vars
 
 
 def get_file_icon(path, ext):
-    photos = [".jpg", ".png", ".jpeg", ".ico"]
+    photos = [".jpg", ".png", ".jpeg", ".ico", ".icon"]
     videos = [".mp4", ".mpg", ".avi", ".rmvb", ".webm", ".mkv"]
     audio = [".mp3"]
     if ext in photos:
@@ -56,7 +56,6 @@ class Load_Thumb:
 
         for item in childrens:
             if not self.stop.is_set ():
-                # print("\rExecution " + item + "\r", end="_"+item+"_")
                 ext = self.tree.item (item, "values")[0]
                 name = self.tree.item (item, "text")
                 path = os.path.join (self.actual, name + ext)

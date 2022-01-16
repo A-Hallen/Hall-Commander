@@ -41,14 +41,14 @@ class ListFiles:
         lista = []
 
         last = 0
-        if path != '/':
-            lista.insert (0, ("..", "", "", str (0), self.back))
+
         if len (list_of_files) == 0:
+            lista.insert (0, ("..", "", "", str (0), self.back))
             return lista
         for i in range (len (list_of_files)):
             # Nombre, extension, tamanio, iid
             lis = list_of_files[i]
-            ipath = path + "/" + lis
+            ipath = os.path.join (path, lis)
             last = i
             if vars.hidden == True:
                 if not lis.startswith ("."):
@@ -87,6 +87,9 @@ class ListFiles:
                                         image))
         listafiles.sort ()
         lista.extend (listafiles)
+        if path != '/':
+            back = [("..", "", "", str (0), self.back)]
+            lista = back + lista
         return lista
 
     def getsize(self, path):

@@ -13,22 +13,23 @@ import magic
 import psutil
 from PIL import ImageTk
 from blkinfo import BlkDiskInfo
+from gi.repository import Gio, Gtk
 
+import SearchWindow
+import vars
 from CopyToClipBoard import CopyToClipBoard
+from FileManipulation import FileManipulation
 from MyDialog import CopyDialog
 from actualizar import Actualizar
-
-gi.require_version ('Gtk', '3.0')
-from gi.repository import Gio, Gtk
-import SearchWindow
-from FileManipulation import FileManipulation
 from center_frame import VerticalBarCommands
 from get_file_icon import Load_Thumb
 from list_files import ListFiles
 from listar import Listar
-from tree_view import TreeViewlist
 from menu_bar import _Menu
-import vars
+from search_tree import Search
+from tree_view import TreeViewlist
+
+gi.require_version ('Gtk', '3.0')
 
 
 # Name of the app
@@ -67,7 +68,8 @@ root.config (bg="black", menu=menus.menu)
 frame = Frame ()
 frame.configure (bg=vars.color_of_side_frames, takefocus=False)
 frame.pack (expand=True, fill=BOTH)
-
+tool_bar = Frame (frame, height=30, bg=vars.soft_gray, takefocus=False)
+tool_bar.pack (fill="x")
 # The left frame of the app
 
 left_frame = Frame (frame)
@@ -106,7 +108,8 @@ right_path.configure (padx=10, text=vars.actual_right_path, width=1, takefocus=F
 right_path.pack (fill="x")
 
 center_frame = Frame (frame)
-center_frame.config (bg=vars.soft_gray, width=35, takefocus=False)
+center_frame.config (bg=vars.soft_gray, width=35, takefocus=False, highlightthickness=1,
+                     highlightbackground=vars.soft_gray)
 center_frame.pack (fill="y", expand=True)
 
 # The tool bar
@@ -335,6 +338,8 @@ image_array.insert (4, PIL.ImageTk.PhotoImage
 (PIL.Image.open ("resources/paste.ico").resize ((24, 24), PIL.Image.ANTIALIAS)))
 
 program_icon_array = []
+
+
 def start_m(event, frame, actual):
     """
     this function starts the frame context menus
@@ -440,20 +445,6 @@ def function_menu_r(event):
 
 def function_menu_l(event):
     start_m (event, right_frame, vars.actual_left_path)
-
-
-def function_marc_r(event):
-    change_right (event)
-    item = right_frame_list.tree.identify ("item", event.x, event.y)
-    right_frame_list.tree.selection_add (item)
-    right_frame_list.tree.focus (item)
-
-
-def function_marc_l(event):
-    change_left (event)
-    item = left_frame_list.tree.identify ("item", event.x, event.y)
-    left_frame_list.tree.selection_add (item)
-    left_frame_list.tree.focus (item)
 
 
 def find_sdiskpart(path):
@@ -594,8 +585,8 @@ left_frame_list.click (change_left)
 left_frame_list.f2 (file_manipulation.f2)
 left_frame_list.tab (tab)
 left_frame_list.back_space (back_space)
-left_frame_list.right_bind_press (function_menu_l, function_marc_l)
-left_frame_list.right_bind_release (function_menu_l, function_marc_l)
+left_frame_list.right_bind_press (function_menu_l)
+left_frame_list.right_bind_release (function_menu_l)
 left_frame_list.F7 (file_manipulation.folder_dialog)
 left_frame_list.delete (file_manipulation.delete_dialog)
 left_frame_list.F5 (file_manipulation.copy_dialog)
@@ -606,15 +597,110 @@ right_frame_list.click (change_right)
 right_frame_list.f2 (lambda event: file_manipulation.f2 (event, False))
 right_frame_list.tab (lambda event, left=False: tab (event, left))
 right_frame_list.back_space (lambda event, left=False: back_space (event, left))
-right_frame_list.right_bind_press (function_menu_r, function_marc_r)
-right_frame_list.right_bind_release (function_menu_r, function_marc_r)
+right_frame_list.right_bind_press (function_menu_r)
+right_frame_list.right_bind_release (function_menu_r)
 right_frame_list.F7 (lambda event: file_manipulation.folder_dialog (event, False))
 right_frame_list.delete (lambda event: file_manipulation.delete_dialog (event, False))
 right_frame_list.F5 (lambda event: file_manipulation.copy_dialog (event, False))
+hovered_items = 0
+
+image_drag = PIL.Image.open ("folder.ico")
+photo_drag = PIL.ImageTk.PhotoImage (image_drag)
+canvas_drag = Label (image=photo_drag)
+
+ima = PIL.Image.new ('RGBA', (30, 30))
+label = Label (master=center_frame, image=ImageTk.PhotoImage (ima))
+
+
+def motion_general(event: Event, left=True):
+    if left:
+        other = right_frame_list.tree
+        frame_list = right_frame
+    else:
+        other = left_frame_list.tree
+        frame_list = left_frame
+
+    if event.widget.winfo_containing (event.x_root, event.y_root) != event.widget:
+        widget = event.widget
+        item = widget.focus ()
+        imagen = widget.item (item, "image")
+        x = event.x - 30
+        y = event.y - 30
+        canvas_drag.config (image=imagen)
+        canvas_drag.place (in_=widget, x=x, y=y, width=30, height=30)
+    global hovered_items
+    item_under = other.identify ("item", event.x, event.y)
+    if item_under != hovered_items:
+        other.item (hovered_items, tags="")
+    containing = event.widget.winfo_containing (event.x_root, event.y_root)
+    if containing == other:
+        frame_list.config (bg="green")
+        hovered_items = item_under
+        other.item (item_under, tags="even")
+        label.grid_forget ()
+    elif containing == center_frame:
+        row = center_frame.grid_size ()[1]
+        label.grid (column=0, row=row, pady=2)
+        frame_list.config (bg="black")
+    else:
+        label.grid_forget ()
+        frame_list.config (bg="black")
+
+
+def droped(event, left=True):
+    if left:
+        frame_list = right_frame
+        other = right_frame_list.tree
+        tree = left_frame_list.tree
+        actual_source = vars.actual_left_path
+        actual_dest = vars.actual_right_path
+        listar = listar_r
+        label_path = right_path
+    else:
+        label_path = left_path
+        listar = listar_l
+        actual_source = vars.actual_right_path
+        actual_dest = vars.actual_left_path
+        tree = right_frame_list.tree
+        other = left_frame_list.tree
+        frame_list = left_frame
+    canvas_drag.place_forget ()
+    frame_list.config (bg="black")
+    item_in_drag = tree.selection ()
+    other.item (hovered_items, tags="")
+    item = other.identify ("item", event.x, event.y)
+    containing = event.widget.winfo_containing (event.x_root, event.y_root)
+
+    if containing == other:
+        if other.item (item, "text") == "":
+            path_item = ""
+        else:
+            name_item = other.item (item, "text") + other.item (item, "values")[0]
+            path_item = os.path.join (actual_dest, name_item)
+        items_path = []
+        for i in item_in_drag:
+            items_path.append (os.path.join (actual_source, tree.item (i, "text") + tree.item (i, "values")[0]))
+        if os.path.isdir (path_item):
+            destiny = os.path.join (actual_dest, path_item)
+        else:
+            destiny = actual_dest
+        CopyDialog (items_path, destiny, listar, label_path, root, actualizar)
+    elif containing == center_frame:
+        imagen = tree.item (item_in_drag[0], "image")
+        path = os.path.join (actual_source,
+                             tree.item (item_in_drag[0], "text") + tree.item (item_in_drag[0], "values")[0])
+        vertical_bar.create_link (None, True, path)
+
+
+right_frame_list.tree.bind ("<ButtonRelease-1>", lambda event: droped (event, False))
+right_frame_list.drag (lambda event: motion_general (event, False))
+left_frame_list.tree.bind ("<ButtonRelease-1>", droped)
+left_frame_list.drag (motion_general)
 
 
 # Create the entry widget for search actions in panels
-def destroy(event, left=None, item=0):
+def destroy(event, search, left=None, item=0):
+    search.serach_tree ("")
     if left != None:
         if left == True:
             left_frame_list.tree.focus_set ()
@@ -622,24 +708,45 @@ def destroy(event, left=None, item=0):
         else:
             right_frame_list.tree.focus_set ()
             right_frame_list.tree.focus (item)
-    event.widget.destroy ()
+    event.widget.pack_forget ()
 
 
-def a(event, key="a"):
+def b_(event, search_tree):
+    entry = event.widget
+    text = entry.get ()
+    search_tree.serach_tree (text)
+
+
+entry_search_right = Entry (right_frame, bg="black", fg="white", takefocus=False, insertbackground="white")
+
+
+def a(event):
+    if event.char == "":
+        return
+    key = event.char
+    search_tree = Search (right_frame_list.tree)
     item_focused = right_frame_list.tree.focus ()
-    entry_search_right = Entry (right_frame, bg="black", fg="white", takefocus=False)
-    entry_search_right.bind ("<FocusOut>", lambda event, item=item_focused: destroy (event, False, item))
-    entry_search_right.bind ("<Escape>", lambda event, item=item_focused: destroy (event, False, item))
+    entry_search_right.bind ("<Escape>",
+                             lambda event, item=item_focused, search=search_tree: destroy (event, search, False, item))
+    entry_search_right.bind ("<KeyRelease>", lambda event, search=search_tree: b_ (event, search))
+
     entry_search_right.pack (fill=BOTH)
     entry_search_right.focus ()
     entry_search_right.insert (0, key)
 
 
-def b(event, key="a"):
-    item_focused = left_frame_list.tree.focus_set ()
-    entry_search_left = Entry (left_frame, bg="black", fg="white", takefocus=False)
-    entry_search_left.bind ("<FocusOut>", lambda event, item=item_focused: destroy (event, True, item))
-    entry_search_left.bind ("<Escape>", lambda event, item=item_focused: destroy (event, True, item))
+entry_search_left = Entry (left_frame, bg="black", fg="white", takefocus=False, insertbackground="white")
+
+
+def b(event: Event):
+    if event.char == "" or event.char == '':
+        return
+    key = event.char
+    search_tree = Search (left_frame_list.tree)
+    item_focused = left_frame_list.tree.focus ()
+    entry_search_left.bind ("<Escape>",
+                            lambda event, item=item_focused, search=search_tree: destroy (event, search, True, item))
+    entry_search_left.bind ("<KeyRelease>", lambda event, search=search_tree: b_ (event, search))
     entry_search_left.pack (fill=BOTH)
     entry_search_left.focus ()
     entry_search_left.insert (0, key)
@@ -689,12 +796,16 @@ foto = PIL.Image.open ("folder.png")
 image = ImageTk.PhotoImage (foto)
 root.iconphoto (True, image)
 
+
 def hidden(event):
+    """
+    When press ctrl o we hide or unhide files and store this in preferences.json
+    """
     preferences = open ("preferences.json", "r")
     read = preferences.read ()
     preferences.close ()
     js = json.loads (read)
-    if js["hidden"][0] == False:
+    if not js["hidden"][0]:
         js["hidden"][0] = True
         save = json.dumps (js, indent=4)
         prefs = open ("preferences.json", "w")

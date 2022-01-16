@@ -3,7 +3,7 @@
     false
   ],
   "lasts_windows": {
-    "left": "/media/kali/Disco local",
+    "left": "/home/kali/Downloads/Video",
     "right": "/home/kali/Downloads/Video"
   },
   "commands": {
@@ -36,6 +36,24 @@
       "unknown_program.png",
       "/home/kali/Programas/krita-5.0.0-x86_64.appimage",
       false
+    ],
+    "6": [
+      6,
+      "/home/kali/Descargas/Fotos/pycharm.png",
+      "/home/kali/Programas/pycharm-community-2021.3/bin/pycharm.sh",
+      false
+    ],
+    "7": [
+      7,
+      "folder.png",
+      "/home/kali/Downloads/Video",
+      true
+    ],
+    "19": [
+      19,
+      "folder.png",
+      "/home/kali/Downloads/Video/.rec",
+      true
     ]
   }
 }
