@@ -1,7 +1,7 @@
 import json
 import subprocess
 from pathlib import Path
-from tkinter import Menu, Toplevel, Entry, filedialog, Button, BOTH, Frame, Label
+from tkinter import Menu, Toplevel, Entry, filedialog, Button, BOTH, Frame, Label, FLAT
 
 import PIL
 from PIL import Image, ImageTk
@@ -12,6 +12,7 @@ from center_frame import VerticalBarCommands
 
 class VerticalBar:
     def __init__(self, vertical_frame, left, listar_r, listar_l, left_path, right_path):
+        self.entry = None
         self.imagen = None
         self.image_path = "unknown_program.png"
         self.folder_path = "folder.png"
@@ -36,10 +37,11 @@ class VerticalBar:
         listar.listar (label, name, order)
 
     def start(self, event):
-        menu = Menu (self.vertical_frame, tearoff=False)
-        menu.add_command (label="Add Command", command=self.command)
-        menu.add_command (label="Add Link", command=(lambda link=True: self.command (link)))
-        menu.tk_popup (event.x_root, event.y_root)
+        menu = Menu(self.vertical_frame, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
+                    fg="white", activeforeground="green", activebackground=vars.dark_gray)
+        menu.add_command(label="Add Command", command=self.command)
+        menu.add_command(label="Add Link", command=(lambda link=True: self.command(link)))
+        menu.tk_popup(event.x_root, event.y_root)
 
     def command(self, link=False):
         self.top = Toplevel (self.vertical_frame, bg="black")
@@ -49,8 +51,8 @@ class VerticalBar:
         frame.pack (pady=10, padx=10, fill=BOTH)
         self.entry = Entry (frame, bg=vars.soft_gray)
 
-        if link == True:
-            self.entry.bind ('<Return>', self.create_link)
+        if link:
+            self.entry.bind('<Return>', self.create_link)
         else:
             self.entry.bind ('<Return>', self.create_item)
         self.entry.focus ()
@@ -62,8 +64,8 @@ class VerticalBar:
         cancelar = Button (close_frame, text="Cancelar", command=self.close)
         cancelar.pack (side='left')
 
-        if link == True:
-            aceptar = Button (close_frame, text="Aceptar", command=self.aceptar_link)
+        if link:
+            aceptar = Button(close_frame, text="Aceptar", command=self.aceptar_link)
         else:
             aceptar = Button (close_frame, text="Aceptar", command=self.aceptar)
         aceptar.pack (side='right')

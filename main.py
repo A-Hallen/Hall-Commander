@@ -1,8 +1,8 @@
+#! /usr/bin/python3
 import io
 import json
 import os.path
-import string
-import sys
+import threading
 from tkinter import *
 from tkinter import ttk
 
@@ -12,8 +12,6 @@ import gi
 import magic
 import psutil
 from PIL import ImageTk
-from blkinfo import BlkDiskInfo
-from gi.repository import Gio, Gtk
 
 import SearchWindow
 import vars
@@ -23,19 +21,21 @@ from MyDialog import CopyDialog
 from actualizar import Actualizar
 from center_frame import VerticalBarCommands
 from get_file_icon import Load_Thumb
+from horizontal_bar import HorizontalBar
+from list_drives import Drives
 from list_files import ListFiles
 from listar import Listar
 from menu_bar import _Menu
+from popup_menu import PopUpMenu
 from search_tree import Search
 from tree_view import TreeViewlist
+from vertical_bar import VerticalBar
 
-gi.require_version ('Gtk', '3.0')
+gi.require_version('Gtk', '3.0')
+from gi.repository import Gio, Gtk
 
 
-# Name of the app
-# Cargar el archivo que tiene todas las configuraciones necesarias
-
-# the firt function we execute
+# the first function we execute
 def start():
     prefs = open ("preferences.json", "r")
     read_prefs = prefs.read ()
@@ -45,41 +45,46 @@ def start():
     actualright = json_read["lasts_windows"]["right"]
     if os.path.exists (actualleft) and os.path.isdir (actualleft):
         vars.actual_left_path = actualleft
-    if os.path.exists (actualright) and os.path.isdir (actualright):
+    if os.path.exists(actualright) and os.path.isdir(actualright):
         vars.actual_right_path = actualright
     vars.hidden = json_read["hidden"][0]
 
 
-start ()
+start()
 # Set the root window
-from vertical_bar import VerticalBar
 
-root = Tk ()
-root.title (vars.name_of_the_app)
-root.geometry ("800x500")
-
+root = Tk()
+root.title(vars.name_of_the_app)
+# read the window last size
+with open("preferences.json", "r") as last_size_prefs:
+    json_size = json.loads(last_size_prefs.read())
+    last_size = json_size["lasts_windows"]["size"]
+root.geometry(last_size)
 # The menu of the app
-menus = _Menu (root, vars.name_of_the_app)
+menus = _Menu(root, vars.name_of_the_app)
 
 # The root config
-root.config (bg="black", menu=menus.menu)
+root.config(bg="black", menu=menus.menu)
 
 # The main frame of the window
-frame = Frame ()
-frame.configure (bg=vars.color_of_side_frames, takefocus=False)
-frame.pack (expand=True, fill=BOTH)
-tool_bar = Frame (frame, height=30, bg=vars.soft_gray, takefocus=False)
-tool_bar.pack (fill="x")
+frame = Frame()
+frame.configure(bg=vars.color_of_side_frames, takefocus=False)
+frame.pack(expand=True, fill=BOTH)
+tool_bar_top = Frame(frame, height=30, bg=vars.soft_gray, takefocus=False)
+tool_bar_top.pack(fill="x")
+tool_bar_start = HorizontalBar(tool_bar_top)
+tool_bar_start.load_icons()
+tool_bar_top.bind("<ButtonPress-3>", tool_bar_start.start_menu)
 # The left frame of the app
 
-left_frame = Frame (frame)
-left_frame.config (bg=vars.color_of_side_frames, bd=2, takefocus=False)
-left_frame.pack_propagate (False)
-left_frame.pack (fill=BOTH, expand=True, side=LEFT)
+left_frame = Frame(frame)
+left_frame.config(bg=vars.color_of_side_frames, bd=2, takefocus=False)
+left_frame.pack_propagate(False)
+left_frame.pack(fill=BOTH, expand=True, side=LEFT)
 
-drive_bar_left = Frame (left_frame)
-drive_bar_left.config (bg=vars.soft_gray, height=22, takefocus=False)
-drive_bar_left.pack (fill="x")
+drive_bar_left = Frame(left_frame)
+drive_bar_left.config(bg=vars.soft_gray, height=22, takefocus=False)
+drive_bar_left.pack(fill="x")
 drive_bar_left.grid_propagate (False)
 drive_left = Frame (drive_bar_left, bg=vars.soft_gray)
 drive_left.grid (row=0, column=0)
@@ -226,7 +231,7 @@ def listar_right(event):
     global item_right_text
     item_right = right_frame_list.tree.selection ()[0]  # Identificamos el item que a sido doble clickeado
     item_right_text = right_frame_list.tree.item (item_right, "text") + \
-                      right_frame_list.tree.item (item_right, "values")[0]  # Extraemos el texto que posee ese item
+                      right_frame_list.tree.item(item_right, "values")[0]
     if item_right_text == "":
         return
     path = vars.actual_right_path + "/" + item_right_text  # calculamos su path
@@ -250,44 +255,38 @@ def edit(path, actual_path, left):
     def edit_enter(event):
         global text
         text = label_edit.get ()
-        if left == True:
-            listar_l.listar (path, "", text)
+        if left:
+            listar_l.listar(path, "", text)
         else:
             listar_r.listar (path, "", text)
 
     label_edit.bind ("<Return>", edit_enter)
 
 
-# Here we handle the littel edit at top of the two frames
+# Here we handle the little edit at top of the two frames
 def edit_left(event):
-    edit (left_path, vars.actual_left_path, True)
+    edit(left_path, vars.actual_left_path, True)
 
 
 # Here we handle the little edit at top right
 def edit_right(event):
-    edit (right_path, vars.actual_right_path, False)
+    edit(right_path, vars.actual_right_path, False)
 
 
 # -------------------------------------===========================================--------------------------------------
-vertical_bar = VerticalBar (center_frame, True, listar_r, listar_l, left_path, right_path)
-
-
-def click_center(event):
-    vertical_bar.start (event)
-
-
-center_frame.bind ("<ButtonPress-3>", click_center)
-# -------------------------------------Initialize the images of the central frame----------------------------------------
-vertical_bar_commands = VerticalBarCommands (center_frame, listar_r, listar_l, left_path, right_path)
-vertical_bar_commands.command ()
+vertical_bar = VerticalBar(center_frame, True, listar_r, listar_l, left_path, right_path)
+center_frame.bind("<ButtonPress-3>", vertical_bar.start)
+# -----------------------------Initialize the images of the central frame--------------------------------
+vertical_bar_commands = VerticalBarCommands(center_frame, listar_r, listar_l, left_path, right_path)
+vertical_bar_commands.command()
 
 
 # -------------------------------------===========================================--------------------------------------
 def change_left(event):
     vars.selection_left = True
-    vars.last_selection_right = right_frame_list.tree.focus ()
-    right_frame_list.tree.item (right_frame_list.tree.focus (), tags="odd")
-    left_frame_list.tree.item (vars.last_selection_left, tags="")
+    vars.last_selection_right = right_frame_list.tree.focus()
+    right_frame_list.tree.item(right_frame_list.tree.focus(), tags="odd")
+    left_frame_list.tree.item(vars.last_selection_left, tags="")
     right_frame_list.tree.selection_remove (*right_frame_list.tree.get_children ())
 
 
@@ -301,7 +300,6 @@ def change_right(event):
 
 def tab(event, left=True):
     if left:
-        a = left_frame_list.tree.focus ()
         vars.selection_left = False
         if vars.last_selection_right == "":
             vars.last_selection_right = 0
@@ -319,43 +317,42 @@ def tab(event, left=True):
 
 def back_space(event, left=True):
     if left:
-        listar_l.listar (left_path, "..", vars.actual_left_path + "/..")
+        listar_l.listar(left_path, "..", vars.actual_left_path + "/..")
     else:
-        listar_r.listar (right_path, "..", vars.actual_right_path + "/..")
+        listar_r.listar(right_path, "..", vars.actual_right_path + "/..")
 
 
 # Here we initialize the images of menus
 image_array = []
-image_array.insert (0, PIL.ImageTk.PhotoImage
-(PIL.Image.open ("resources/borrar.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
-image_array.insert (1, PIL.ImageTk.PhotoImage
-(PIL.Image.open ("resources/cortar.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
-image_array.insert (2, PIL.ImageTk.PhotoImage
-(PIL.Image.open ("resources/copiar.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
-image_array.insert (3, PIL.ImageTk.PhotoImage
-(PIL.Image.open ("resources/propiedades.png").resize ((24, 24), PIL.Image.ANTIALIAS)))
-image_array.insert (4, PIL.ImageTk.PhotoImage
-(PIL.Image.open ("resources/paste.ico").resize ((24, 24), PIL.Image.ANTIALIAS)))
-
+image_array.insert(0, PIL.ImageTk.PhotoImage(PIL.Image.open("resources/borrar.png")
+                                             .resize((24, 24), PIL.Image.ANTIALIAS)))
+image_array.insert(1, PIL.ImageTk.PhotoImage(PIL.Image.open("resources/cortar.png")
+                                             .resize((24, 24), PIL.Image.ANTIALIAS)))
+image_array.insert(2, PIL.ImageTk.PhotoImage(PIL.Image.open("resources/copiar.png")
+                                             .resize((24, 24), PIL.Image.ANTIALIAS)))
+image_array.insert(3, PIL.ImageTk.PhotoImage(PIL.Image.open("resources/propiedades.png")
+                                             .resize((24, 24), PIL.Image.ANTIALIAS)))
+image_array.insert(4, PIL.ImageTk.PhotoImage(PIL.Image.open("resources/paste.ico")
+                                             .resize((24, 24), PIL.Image.ANTIALIAS)))
 program_icon_array = []
 
 
-def start_m(event, frame, actual):
+def start_m(event, _frame, actual):
     """
     this function starts the frame context menus
 
+    :param actual:  the actual path should be string
+    :param _frame:
     :param event: the event
-    :param frame: the frame in wich we want to inherit
     :return:
     """
+    global program_icon_array
     tree: ttk.Treeview = event.widget
     item = tree.identify ("item", event.x, event.y)
     # Initialize the images
 
-    image = tree.item (item, "image")
-
-    menu = Menu (frame, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
-                 fg="white", activeforeground="green", activebackground=vars.dark_gray)
+    menu = Menu(_frame, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
+                fg="white", activeforeground="green", activebackground=vars.dark_gray)
     if item == "":
         print ("This is not any item")
     else:
@@ -367,72 +364,125 @@ def start_m(event, frame, actual):
         if os.path.isdir (path):
             menu.add_command (label="Abrir carpeta")
         else:
-            mime = mime.from_file (path)
-            open_with = Menu (menu, tearoff=False, bd=9, relief=FLAT, activeforeground="green",
-                              bg=vars.dark_gray, fg="white", activebackground=vars.dark_gray)
+            mime = mime.from_file(path)
+            open_with = Menu(menu, tearoff=False, bd=9, relief=FLAT, activeforeground="green",
+                             bg=vars.dark_gray, fg="white", activebackground=vars.dark_gray)
 
             # mounts = Gio.unix_mount_points_get()
+            def get_images(filename):
+                pg = None
+                try:
+                    formats = [".ppm", ".png", ".jpg", ".jpeg", ".gif", ".tiff", ".bmp"]
+                    if os.path.splitext(filename)[1].lower() in formats:
+                        pil_img = PIL.Image.open(filename)
+                        res_pil = pil_img.resize((30, 30), PIL.Image.ANTIALIAS)
+                        pg = ImageTk.PhotoImage(res_pil)
+                    else:
+                        png = cairosvg.svg2png(url=filename)
+                        pil_img = PIL.Image.open(io.BytesIO(png))
+                        res_pil = pil_img.resize((30, 30), PIL.Image.ANTIALIAS)
+                        pg = ImageTk.PhotoImage(res_pil)
+                except:
+                    pil_img = PIL.Image.open("desconocido.png")
+                    res_pil = pil_img.resize((30, 30), PIL.Image.ANTIALIAS)
+                    pg = ImageTk.PhotoImage(res_pil)
+                finally:
+                    return pg
 
             # This is the function that launchs the files
             def launch_program(program):
-                item_list = tree.selection ()
+                item_list = tree.selection()
                 path_list = []
                 for i in item_list:
-                    _path = os.path.join (actual, tree.item (i, "text") + tree.item (i, "values")[0])
-                    path_list.append (Gio.File.new_for_path (_path))
-                program.launch (path_list)
+                    _path = os.path.join(actual, tree.item(i, "text") + tree.item(i, "values")[0])
+                    path_list.append(Gio.File.new_for_path(_path))
+                program.launch(path_list)
 
             l = Gio.app_info_get_recommended_for_type (mime)
             for e in range (len (l)):
                 app = l[e]
-                icon = app.get_icon ()
-                icon_theme = Gtk.IconTheme.get_default ()
-                icon_file = icon_theme.lookup_icon (icon.to_string (), 32, 0)
+                icon = app.get_icon()
+                icon_theme = Gtk.IconTheme.get_default()
+                icon_file = icon_theme.lookup_icon(icon.to_string(), 32, 0)
                 final_filename = ""
-                if icon_file != None:
-                    final_filename = icon_file.get_filename ()
+                if icon_file is not None:
+                    final_filename = icon_file.get_filename()
 
-                try:
-                    png = cairosvg.svg2png (url=final_filename)
-                    pil_img = PIL.Image.open (io.BytesIO (png))
-                    res_pil = pil_img.resize ((30, 30), PIL.Image.ANTIALIAS)
-                    pg = ImageTk.PhotoImage (res_pil)
-                    program_icon_array.insert (e, pg)
-                except:
-                    print ("error", final_filename)
-                open_with.add_command (image=program_icon_array[e], compound="left", label=app.get_name (),
-                                       command=lambda program=app: launch_program (program))
-            default = Gio.app_info_get_default_for_type (mime, False)
-            image_new = PIL.Image.new ('RGBA', (30, 30))
-            image_new = ImageTk.PhotoImage (image_new)
+                imagen = get_images(final_filename)
+                program_icon_array.insert(e, imagen)
+                open_with.add_command(image=program_icon_array[e], compound="left", label=app.get_name(),
+                                      command=lambda program=app: launch_program(program))
+            default = Gio.app_info_get_default_for_type(mime, False)
+            image_new = PIL.Image.new('RGBA', (30, 30))
+            image_new = ImageTk.PhotoImage(image_new)
+
+            def launch_other_program():
+                global program_icon_array
+                program_icon_array = []
+                apps = Gio.app_info_get_all()
+                menu_ = PopUpMenu(root, bd=10, bordercolor="black")
+                texto = "Abrir: " + tree.item(item, "text")
+                imagen_ = tree.item(item, "image")
+                menu_.title(text=texto, image=imagen_)
+
+                def launch(event, tree):
+                    item_ = tree.identify("item", event.x, event.y)
+                    index = tree.item(item_, "values")[0]
+                    menu_.destroy()
+                    launch_program(apps[int(index)])
+
+                menu_.onclick(launch)
+
+                def start_thread():
+                    for index, app_ in enumerate(apps):
+                        if not app_.should_show():
+                            program_icon_array.insert(index, None)
+                            continue
+                        try:
+                            icono = app_.get_icon()
+                            icono_theme = Gtk.IconTheme.get_default()
+                            icono_file = icono_theme.lookup_icon(icono.to_string(), 32, 0)
+                            nombre = ""
+                            if icono_file is not None:
+                                nombre = icono_file.get_filename()
+                        except:
+                            nombre = ""
+
+                        image_ = get_images(nombre)
+                        program_icon_array.insert(index, image_)
+                        menu_.add_command(text=app_.get_name(), image=program_icon_array[index], index=index)
+
+                hilo = threading.Thread(target=start_thread)
+                hilo.start()
 
             def copiar():
                 selections = []
-                paths = tree.selection ()
+                paths = tree.selection()
                 for f in paths:
-                    item_text = tree.item (f, "text") + tree.item (f, "values")[0]
-                    selections.append (os.path.join (actual, item_text))
+                    item_text = tree.item(f, "text") + tree.item(f, "values")[0]
+                    selections.append(os.path.join(actual, item_text))
 
-                CopyToClipBoard ().copyfile (selections)
+                CopyToClipBoard().copyfile(selections)
 
             def pegar():
-                if vars.last_selection_left == True:
-                    copy_dialog = CopyDialog (vars.portapapeles, actual, listar_r, left_path, root, actualizar)
+                if vars.last_selection_left:
+                    CopyDialog(vars.portapapeles, actual, listar_r, left_path, root, actualizar)
                 else:
-                    copy_dialog = CopyDialog (vars.portapapeles, actual, listar_l, right_path, root, actualizar)
+                    CopyDialog(vars.portapapeles, actual, listar_l, right_path, root, actualizar)
 
-            open_with.add_command (image=image_new, compound="left", label="Abri con otro programa")
-            menu.add_command (image=image, compound="left", label="Abrir archivo",
-                              command=lambda default=default: launch_program (default))
-            menu.add_separator ()
-            menu.add_cascade (label="Abrir con", menu=open_with)
-            menu.add_separator ()
-            menu.add_command (image=image_array[2], compound="left", label="Copiar", command=copiar)
-            menu.add_command (image=image_array[1], compound="left", label="Cortar")
-            if len (vars.portapapeles) == 0:
-                print ("Portapapeles vacio")
+            open_with.add_command(image=image_new, compound="left", label="Abri con otro programa",
+                                  command=launch_other_program)
+            menu.add_command(image=tree.item(item, "image"), compound="left", label="Abrir archivo",
+                             command=lambda default=default: launch_program(default))
+            menu.add_separator()
+            menu.add_cascade(label="Abrir con", menu=open_with)
+            menu.add_separator()
+            menu.add_command(image=image_array[2], compound="left", label="Copiar", command=copiar)
+            menu.add_command(image=image_array[1], compound="left", label="Cortar")
+            if len(vars.portapapeles) == 0:
+                print("Portapapeles vacio")
             else:
-                menu.add_command (image=image_array[4], label="Pegar", command=pegar, compound="left")
+                menu.add_command(image=image_array[4], label="Pegar", command=pegar, compound="left")
             menu.add_command (image=image_array[0], compound="left", label="Eliminar")
             menu.add_command (image=image_array[3], compound="left", label="Propiedades")
 
@@ -459,28 +509,6 @@ def find_sdiskpart(path):
     raise psutil.Error
 
 
-def get_device_tipe(mountpoint):
-    if 'win' in sys.platform:
-        drives = []
-        from ctypes import windll
-        bitmask = windll.kernel32.GetLogicalDrives ()
-        for letter in string.ascii_uppercase:
-            if bitmask & 1:
-                drives.append (letter)
-                bitmask >>= 1
-                return drives
-    elif 'linux' in sys.platform:
-        myblkd = BlkDiskInfo ()
-        filters = {
-            'mountpoint': str (mountpoint)
-        }
-
-        my_filtered_disks = myblkd.get_disks (filters)
-        json_output = json.dumps (my_filtered_disks, indent=4)
-        print (json_output)
-        name = os.path.abspath (mountpoint)
-
-
 label_left_t = Label (drive_bar_left, padx=10, takefocus=False, fg=vars.gray, font=('Calibri', 9, 'normal'),
                       bg=vars.soft_gray)
 label_left_t.grid (row=0, column=1)
@@ -500,7 +528,6 @@ def list_drives(photo):
     # ============
 
     partitions = psutil.disk_partitions ()
-    a = 0
 
     def get_disponible(path):
         name = find_sdiskpart (path).device
@@ -560,36 +587,49 @@ def list_drives(photo):
 
         button_l = Button (fram_l, image=image, bg=vars.soft_gray, bd=0, highlightthickness=0, takefocus=False,
                            command=lambda path=partitions[p].mountpoint: listar (path))
-        button_r = Button (fram_r, image=image, bg=vars.soft_gray, bd=0, highlightthickness=0, takefocus=False,
-                           command=lambda path=partitions[p].mountpoint: listar (path, False))
-        button_l.grid (row=0, column=0)
-        button_r.grid (row=0, column=0)
-        label_l = Label (fram_l, text=str (alphabet[p]), bg=vars.soft_gray, takefocus=False)
-        label_r = Label (fram_r, text=str (alphabet[p]), bg=vars.soft_gray, takefocus=False)
-        label_l.grid (row=0, column=1)
-        label_r.grid (row=0, column=1)
+        button_r = Button(fram_r, image=image, bg=vars.soft_gray, bd=0, highlightthickness=0, takefocus=False,
+                          command=lambda path=partitions[p].mountpoint: listar(path, False))
+        button_l.grid(row=0, column=0)
+        button_r.grid(row=0, column=0)
+        label_l = Label(fram_l, text=str(alphabet[p]), bg=vars.soft_gray, takefocus=False)
+        label_r = Label(fram_r, text=str(alphabet[p]), bg=vars.soft_gray, takefocus=False)
+        label_l.grid(row=0, column=1)
+        label_r.grid(row=0, column=1)
 
 
-image_disk = PIL.Image.open ("resources/hd_hard.ico")
-img_disk = image_disk.resize ((20, 20), PIL.Image.ANTIALIAS)
-image_usb = PIL.Image.open ("resources/usb.ico")
-img_usb = image_usb.resize ((20, 20), PIL.Image.ANTIALIAS)
-photo = []
-photo.append (ImageTk.PhotoImage (img_disk))
-photo.append (ImageTk.PhotoImage (img_usb))
-list_drives (photo)
+def f12(event, left=True):
+    """
+    Here we instantiate the searchwindow class
+    """
+    global iscontrolpressed
+    iscontrolpressed = True
+    if left:
+        SearchWindow.SearchWindow(root, vars.actual_left_path, listar_l, left_path)
+    else:
+        SearchWindow.SearchWindow(root, vars.actual_right_path, listar_r, right_path)
 
-left_frame_list.double_click (listar_left)  # Aniadimos la funcion
-left_path.bind ("<Double-1>", edit_left)
-left_frame_list.click (change_left)
-left_frame_list.f2 (file_manipulation.f2)
-left_frame_list.tab (tab)
-left_frame_list.back_space (back_space)
-left_frame_list.right_bind_press (function_menu_l)
-left_frame_list.right_bind_release (function_menu_l)
-left_frame_list.F7 (file_manipulation.folder_dialog)
+
+image_disk = PIL.Image.open("resources/hd_hard.ico")
+img_disk = image_disk.resize((20, 20), PIL.Image.ANTIALIAS)
+image_usb = PIL.Image.open("resources/usb.ico")
+img_usb = image_usb.resize((20, 20), PIL.Image.ANTIALIAS)
+photo = [ImageTk.PhotoImage(img_disk), ImageTk.PhotoImage(img_usb)]
+Drives(drive_left, drive_right, photo, label_left_t,
+       label_right_t, label_left_d, label_right_d,
+       listar_l, listar_r, left_path, right_path)
+
+left_frame_list.double_click(listar_left)  # Aniadimos la funcion
+left_path.bind("<Double-1>", edit_left)
+left_frame_list.click(change_left)
+left_frame_list.f2(file_manipulation.f2)
+left_frame_list.tab(tab)
+left_frame_list.back_space(back_space)
+left_frame_list.right_bind_press(function_menu_l)
+left_frame_list.right_bind_release(function_menu_l)
+left_frame_list.F7(file_manipulation.folder_dialog)
 left_frame_list.delete (file_manipulation.delete_dialog)
-left_frame_list.F5 (file_manipulation.copy_dialog)
+left_frame_list.F5(file_manipulation.copy_dialog)
+left_frame_list.f12(f12)
 
 right_frame_list.double_click (listar_right)
 right_path.bind ("<Double-1>", edit_right)
@@ -601,10 +641,11 @@ right_frame_list.right_bind_press (function_menu_r)
 right_frame_list.right_bind_release (function_menu_r)
 right_frame_list.F7 (lambda event: file_manipulation.folder_dialog (event, False))
 right_frame_list.delete (lambda event: file_manipulation.delete_dialog (event, False))
-right_frame_list.F5 (lambda event: file_manipulation.copy_dialog (event, False))
+right_frame_list.F5(lambda event: file_manipulation.copy_dialog(event, False))
+right_frame_list.f12(lambda event: f12(event, False))
 hovered_items = 0
-
-image_drag = PIL.Image.open ("folder.ico")
+hovered_items_tree = 0
+image_drag = PIL.Image.open("folder.ico")
 photo_drag = PIL.ImageTk.PhotoImage (image_drag)
 canvas_drag = Label (image=photo_drag)
 
@@ -615,8 +656,10 @@ label = Label (master=center_frame, image=ImageTk.PhotoImage (ima))
 def motion_general(event: Event, left=True):
     if left:
         other = right_frame_list.tree
+        tree = left_frame_list.tree
         frame_list = right_frame
     else:
+        tree = right_frame_list.tree
         other = left_frame_list.tree
         frame_list = left_frame
 
@@ -632,6 +675,7 @@ def motion_general(event: Event, left=True):
     item_under = other.identify ("item", event.x, event.y)
     if item_under != hovered_items:
         other.item (hovered_items, tags="")
+
     containing = event.widget.winfo_containing (event.x_root, event.y_root)
     if containing == other:
         frame_list.config (bg="green")
@@ -679,14 +723,15 @@ def droped(event, left=True):
             path_item = os.path.join (actual_dest, name_item)
         items_path = []
         for i in item_in_drag:
-            items_path.append (os.path.join (actual_source, tree.item (i, "text") + tree.item (i, "values")[0]))
+            if tree.item(i, "text") != "..":
+                items_path.append(os.path.join(actual_source, tree.item(i, "text") + tree.item(i, "values")[0]))
         if os.path.isdir (path_item):
             destiny = os.path.join (actual_dest, path_item)
         else:
             destiny = actual_dest
         CopyDialog (items_path, destiny, listar, label_path, root, actualizar)
     elif containing == center_frame:
-        imagen = tree.item (item_in_drag[0], "image")
+        label.grid_forget()
         path = os.path.join (actual_source,
                              tree.item (item_in_drag[0], "text") + tree.item (item_in_drag[0], "values")[0])
         vertical_bar.create_link (None, True, path)
@@ -717,21 +762,25 @@ def b_(event, search_tree):
     search_tree.serach_tree (text)
 
 
-entry_search_right = Entry (right_frame, bg="black", fg="white", takefocus=False, insertbackground="white")
+entry_search_right = Entry(right_frame, bg="black", fg="white", takefocus=False, insertbackground="white")
+iscontrolpressed = False
 
 
 def a(event):
-    if event.char == "":
+    global iscontrolpressed
+    if event.keysym == "Control_L" or event.keysym == "Control_R":
+        iscontrolpressed = True
+    if event.char == "" or iscontrolpressed or event.keysym == "Escape":
         return
     key = event.char
-    search_tree = Search (right_frame_list.tree)
-    item_focused = right_frame_list.tree.focus ()
-    entry_search_right.bind ("<Escape>",
-                             lambda event, item=item_focused, search=search_tree: destroy (event, search, False, item))
-    entry_search_right.bind ("<KeyRelease>", lambda event, search=search_tree: b_ (event, search))
+    search_tree = Search(right_frame_list.tree)
+    item_focused = right_frame_list.tree.focus()
+    entry_search_right.bind("<Escape>",
+                            lambda event, item=item_focused, search=search_tree: destroy(event, search, False, item))
+    entry_search_right.bind("<KeyRelease>", lambda event, search=search_tree: b_(event, search))
 
-    entry_search_right.pack (fill=BOTH)
-    entry_search_right.focus ()
+    entry_search_right.pack(fill=BOTH)
+    entry_search_right.focus()
     entry_search_right.insert (0, key)
 
 
@@ -739,40 +788,47 @@ entry_search_left = Entry (left_frame, bg="black", fg="white", takefocus=False, 
 
 
 def b(event: Event):
-    if event.char == "" or event.char == '':
+    global iscontrolpressed
+    if event.keysym == "Control_L" or event.keysym == "Control_R":
+        iscontrolpressed = True
+    if event.char == "" or iscontrolpressed or event.keysym == "Escape":
         return
     key = event.char
-    search_tree = Search (left_frame_list.tree)
-    item_focused = left_frame_list.tree.focus ()
-    entry_search_left.bind ("<Escape>",
-                            lambda event, item=item_focused, search=search_tree: destroy (event, search, True, item))
-    entry_search_left.bind ("<KeyRelease>", lambda event, search=search_tree: b_ (event, search))
-    entry_search_left.pack (fill=BOTH)
-    entry_search_left.focus ()
-    entry_search_left.insert (0, key)
+    search_tree = Search(left_frame_list.tree)
+    item_focused = left_frame_list.tree.focus()
+    entry_search_left.bind("<Escape>",
+                           lambda event, item=item_focused, search=search_tree: destroy(event, search, True, item))
+    entry_search_left.bind("<KeyRelease>", lambda event, search=search_tree: b_(event, search))
+    entry_search_left.pack(fill=BOTH)
+    entry_search_left.focus()
+    entry_search_left.insert(0, key)
 
 
 # Here we bind all the chart keys like a, b, c, d, e etc.
-right_frame_list.a (a)
-left_frame_list.a (b)
-# root.attributes ('-alpha', 0.7)
-w = 800
-h = 500
-ws = root.winfo_screenwidth ()
-hs = root.winfo_screenheight ()
-x = (ws / 2) - (w / 2)
-y = (hs / 2) - (h / 2)
-root.geometry ('%dx%d+%d+%d' % (w, h, x, y))
+right_frame_list.a(a)
+left_frame_list.a(b)
+
+
+def save_size(js):
+    w = root.winfo_width()
+    h = root.winfo_height()
+    with open("preferences.json", "w") as prefs:
+        js["lasts_windows"]["size"] = str(w) + "x" + str(h)
+        s = json.dumps(js, indent=4)
+        prefs.write(s)
 
 
 def last_windows():
     """
     Here we save the paths in wich we are right now
+    for close the program, and store the paths and the size
+    of the window
     """
-    prefs = open ("preferences.json", "r")
-    read = prefs.read ()
+    prefs = open("preferences.json", "r")
+    read = prefs.read()
     prefs.close ()
     jsprefs = json.loads (read)
+    save_size(jsprefs)
     jsprefs["lasts_windows"]["left"] = vars.actual_left_path
     jsprefs["lasts_windows"]["right"] = vars.actual_right_path
     pref = open ("preferences.json", "w")
@@ -784,14 +840,6 @@ def last_windows():
 
 root.protocol ('WM_DELETE_WINDOW', last_windows)
 
-
-def f12(event):
-    """
-    Here we instantiate the searchwindow class
-    """
-    SearchWindow.SearchWindow (root)
-
-
 foto = PIL.Image.open ("folder.png")
 image = ImageTk.PhotoImage (foto)
 root.iconphoto (True, image)
@@ -801,25 +849,33 @@ def hidden(event):
     """
     When press ctrl o we hide or unhide files and store this in preferences.json
     """
-    preferences = open ("preferences.json", "r")
-    read = preferences.read ()
-    preferences.close ()
-    js = json.loads (read)
+    global iscontrolpressed
+    iscontrolpressed = True
+    preferences = open("preferences.json", "r")
+    read = preferences.read()
+    preferences.close()
+    js = json.loads(read)
     if not js["hidden"][0]:
         js["hidden"][0] = True
-        save = json.dumps (js, indent=4)
-        prefs = open ("preferences.json", "w")
-        prefs.write (save)
+        save = json.dumps(js, indent=4)
+        prefs = open("preferences.json", "w")
+        prefs.write(save)
         vars.hidden = True
     else:
         js["hidden"][0] = False
-        save = json.dumps (js, indent=4)
-        prefs = open ("preferences.json", "w")
-        prefs.write (save)
+        save = json.dumps(js, indent=4)
+        prefs = open("preferences.json", "w")
+        prefs.write(save)
         vars.hidden = False
-    actualizar.update ()
+    actualizar.update()
 
 
-root.bind ("<Control-F12>", f12)
-root.bind ("<Control-o>", hidden)
-root.mainloop ()
+def release_control(event):
+    global iscontrolpressed
+    iscontrolpressed = False
+
+
+root.bind("<KeyRelease-Control_L>", release_control)
+root.bind("<KeyRelease-Control_R>", release_control)
+root.bind("<Control-o>", hidden)
+root.mainloop()

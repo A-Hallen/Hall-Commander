@@ -19,8 +19,8 @@ class Listar:
 
     def listar(self, label, item_text, path):
         self.thumb.stop_thread ()
-        if self.left == True:
-            self.listar_left (label, item_text, path)
+        if self.left:
+            self.listar_left(label, item_text, path)
         else:
             self.listar_right (label, item_text, path)
 
@@ -28,8 +28,8 @@ class Listar:
         actual = vars.actual_left_path
         if item_text == "..":
             path = str (Path (actual).parent.absolute ())
-        if self.check_file (path) == False:
-            self.read_file (path)
+        if not self.check_file(path):
+            self.read_file(path)
         else:
             lista_l = self.listfiles.list (path)  # Obtenemos la lista de elementos que contiene esa carpeta
             self.class_tree.clear ()  # Limpiamos el contenido del TreeView
@@ -48,8 +48,8 @@ class Listar:
         actual = vars.actual_right_path
         if item_text == "..":
             path = str (Path (actual).parent.absolute ())
-        if self.check_file (path) == False:
-            self.read_file (path)
+        if not self.check_file(path):
+            self.read_file(path)
         else:
             vars.actual_right_path = path  # Cambiamos la variable global actual_left_path que se encuentra en vars.py
             lista_l = self.listfiles.list (path)  # Obtenemos la lista de elementos que contiene esa carpeta

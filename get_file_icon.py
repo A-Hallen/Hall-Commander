@@ -55,20 +55,30 @@ class Load_Thumb:
         childrens = self.tree.get_children ()
 
         for item in childrens:
-            if not self.stop.is_set ():
-                ext = self.tree.item (item, "values")[0]
-                name = self.tree.item (item, "text")
-                path = os.path.join (self.actual, name + ext)
-                if ext.lower () in photos:
+            if not self.stop.is_set():
+                try:
+                    ext = self.tree.item(item, "values")[0]
+                except:
+                    ext = ""
+                    print("exception in line 61 get_file_icon")
+                try:
+                    global name
+                    global path
+                    name = self.tree.item(item, "text")
+                    path = os.path.join(self.actual, name + ext)
+                except:
+                    print("exception in line 71 get_file_icon")
+                    continue
+                if ext.lower() in photos:
                     try:
-                        image = Image.open (path)
+                        image = Image.open(path)
                     except PIL.UnidentifiedImageError:
-                        image = Image.open ("resources/fotos.png")
+                        image = Image.open("resources/fotos.png")
 
                     if vars.hidden == False:
-                        if name.startswith ("."):
-                            image.putalpha (100)
-                    image.thumbnail ((30, 30), Image.ANTIALIAS)
+                        if name.startswith("."):
+                            image.putalpha(100)
+                    image.thumbnail((30, 30), Image.ANTIALIAS)
                     blank = Image.new ('RGBA', (36, 30))
                     blank.paste (image)
 
@@ -82,17 +92,22 @@ class Load_Thumb:
                     duration = clips.duration
                     max_duration = int (duration) + 1
                     i = max_duration // 2
-                    frame = clips.get_frame (i)
-                    image = Image.fromarray (frame)
-                    image.thumbnail ((30, 30), Image.ANTIALIAS)
-                    blank = Image.new ('RGBA', (36, 30))
-                    blank.paste (image)
+                    frame = clips.get_frame(i)
+                    image = Image.fromarray(frame)
+                    image.thumbnail((30, 30), Image.ANTIALIAS)
+                    blank = Image.new('RGBA', (36, 30))
+                    blank.paste(image)
                     if vars.hidden == False:
-                        if name.startswith ("."):
-                            blank.putalpha (100)
-                    imagen = ImageTk.PhotoImage (blank)
-                    self.array.insert (int (item), imagen)
-                    self.tree.item (item, image=self.array[int (item)])
+                        if name.startswith("."):
+                            blank.putalpha(100)
+                    imagen = ImageTk.PhotoImage(blank)
+                    self.array.insert(int(item), imagen)
+                    try:
+                        self.tree.item(item, image=self.array[int(item)])
+                    except IndexError:
+                        print("line 98, index out of range get_file_icon")
+                    except:
+                        print("line 107, error unknown get_file_icon")
 
                 else:
                     self.array.insert (int (item), "")

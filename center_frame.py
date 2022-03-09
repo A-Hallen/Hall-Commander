@@ -1,7 +1,7 @@
 import json
 import subprocess
 from pathlib import Path
-from tkinter import Label, Menu, Toplevel, Frame, BOTH, Entry, Button, filedialog
+from tkinter import Label, Menu, Toplevel, Frame, BOTH, Entry, Button, filedialog, FLAT
 
 import PIL
 from PIL import Image, ImageTk
@@ -38,7 +38,6 @@ class VerticalBarCommands:
         subprocess.run (over + " &", shell=True)
 
     def command(self):
-
         if len (self.commands) != 0:
             for i in range (len (self.commands)):
                 if not str (i + 1) in self.commands:
@@ -52,31 +51,34 @@ class VerticalBarCommands:
                 e = self.commands[str (i + 1)]
                 row = e[0]
                 image_path = e[1]
-                self.index_array.append (i)
-                self.order_array.insert (i, e[2])
-                self.link_array.insert (i, e[3])
+                self.index_array.append(i)
+                self.order_array.insert(i, e[2])
+                self.link_array.insert(i, e[3])
                 try:
-                    image = Image.open (image_path)
+                    image = Image.open(image_path)
                 except FileNotFoundError:
-                    image = Image.open ("unknown_program.png")
-                image.thumbnail ((35, 35), Image.ANTIALIAS)
-                self.image_array.insert (i, ImageTk.PhotoImage (image))
-                item = Label (master=self.center_frame, image=self.image_array[i],
-                              height=35, text=str (i + 1), width=35, bg=vars.soft_gray)
+                    image = Image.open("unknown_program.png")
+                image.thumbnail((35, 35), Image.ANTIALIAS)
+                self.image_array.insert(i, ImageTk.PhotoImage(image))
+                try:
+                    item = Label(master=self.center_frame, image=self.image_array[i],
+                                 height=35, text=str(i + 1), width=35, bg=vars.soft_gray)
+                except IndexError:
+                    continue
 
                 def execute(event, index):
-                    if self.link_array[index] == True:
-                        self.open_link (self.order_array[index])
+                    if self.link_array[index]:
+                        self.open_link(self.order_array[index])
                     else:
-                        self.executes (self.order_array[index])
+                        self.executes(self.order_array[index])
 
-                item.bind ('<Button-1>', lambda event, index=i: execute (event, index))
-                item.bind ('<Button-3>', self.menu_popup)
-                item.grid (column=0, row=row)
+                item.bind('<Button-1>', lambda event, index=i: execute(event, index))
+                item.bind('<Button-3>', self.menu_popup)
+                item.grid(column=0, row=row)
 
     def open_link(self, order):
         left = vars.selection_left
-        if left == True:
+        if left:
             listar = self.listar_l
             label = self.left_path
         else:
@@ -116,17 +118,18 @@ class VerticalBarCommands:
             texto = ""
             foto = []
             indice = 0
-            for i in range (len (commands)):
-                if str (i + 1) == text:
-                    texto = js["commands"][str (i + 1)][2]
-                    foto.append (js["commands"][str (i + 1)][1])
-                    indice = js["commands"][str (i + 1)][0]
-            self.edit_message (texto, foto, indice, widget)
+            for i in range(len(commands)):
+                if str(i + 1) == text:
+                    texto = js["commands"][str(i + 1)][2]
+                    foto.append(js["commands"][str(i + 1)][1])
+                    indice = js["commands"][str(i + 1)][0]
+            self.edit_message(texto, foto, indice, widget)
 
-        menu = Menu (self.center_frame, tearoff=False)
-        menu.add_command (label="Eliminar", command=eliminar)
-        menu.add_command (label="Editar", command=edit)
-        menu.tk_popup (event.x_root, event.y_root)
+        menu = Menu(self.center_frame, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
+                    fg="white", activeforeground="green", activebackground=vars.dark_gray)
+        menu.add_command(label="Eliminar", command=eliminar)
+        menu.add_command(label="Editar", command=edit)
+        menu.tk_popup(event.x_root, event.y_root)
 
     def edit_message(self, texto, foto, indice, widget):
         top = Toplevel (self.center_frame, bg="black")

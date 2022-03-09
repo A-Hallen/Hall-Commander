@@ -18,7 +18,6 @@ class FileManipulation:
         self.right_frame_list = right_frame_list
         self.root = root
         self.update = update
-        pass
 
     def getsize(self, path):
         bytes = os.path.getsize (path)

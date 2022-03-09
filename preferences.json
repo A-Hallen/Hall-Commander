@@ -1,58 +1,36 @@
 {
   "hidden": [
-    false
+    true
   ],
   "lasts_windows": {
-    "left": "/home/kali/Downloads/Video",
-    "right": "/home/kali/Downloads/Video"
+    "left": "/media/hallen/Disco local",
+    "right": "/home/hallen",
+    "size": "1366x712"
   },
+  "toolbar": {},
   "commands": {
-    "1": [
-      1,
-      "/home/kali/Im\u00e1genes/Command Prompt.ico",
-      "terminator",
-      false
-    ],
-    "2": [
-      2,
-      "folder.png",
-      "/home/kali/Downloads",
-      true
-    ],
-    "3": [
-      3,
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/Download_icon-icons.com_75235.ico",
-      "/media/kali/Disco local/Users/Hallen/Downloads",
-      true
-    ],
-    "4": [
-      4,
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/55.ico",
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/02 DELETE",
-      true
-    ],
     "5": [
       5,
-      "unknown_program.png",
-      "/home/kali/Programas/krita-5.0.0-x86_64.appimage",
-      false
-    ],
-    "6": [
-      6,
       "/home/kali/Descargas/Fotos/pycharm.png",
       "/home/kali/Programas/pycharm-community-2021.3/bin/pycharm.sh",
       false
     ],
-    "7": [
-      7,
-      "folder.png",
-      "/home/kali/Downloads/Video",
+    "6": [
+      6,
+      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/heart_folder_20491.ico",
+      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/3 Anime/3 Series",
       true
     ],
-    "19": [
-      19,
-      "folder.png",
-      "/home/kali/Downloads/Video/.rec",
+    "7": [
+      7,
+      "/home/kali/Im\u00e1genes/AppIcons/123.ico",
+      "/home/kali",
+      true
+    ],
+    "8": [
+      8,
+      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/3d_systempreferences_folder_20519.ico",
+      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000",
       true
     ]
   }
