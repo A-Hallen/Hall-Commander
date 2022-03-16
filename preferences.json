@@ -1,36 +1,47 @@
 {
   "hidden": [
-    true
+    false
   ],
   "lasts_windows": {
-    "left": "/media/hallen/Disco local",
-    "right": "/home/hallen",
+    "left": "/home/hallen",
+    "right": "/media/hallen/Disco local/Users/Hallen/Downloads/Programs",
     "size": "1366x712"
   },
-  "toolbar": {},
-  "commands": {
+  "toolbar": {
+    "4": [
+      "/usr/share/icons/Mint-Y/apps/32/com.visualstudio.code.png",
+      "/usr/share/code/code --unity-launch %F"
+    ],
     "5": [
-      5,
-      "/home/kali/Descargas/Fotos/pycharm.png",
-      "/home/kali/Programas/pycharm-community-2021.3/bin/pycharm.sh",
-      false
+      "/usr/share/icons/Mint-Y/apps/32/org.xfce.taskmanager.png",
+      "xfce4-taskmanager"
     ],
     "6": [
-      6,
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/heart_folder_20491.ico",
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/3 Anime/3 Series",
-      true
+      "/usr/share/icons/Mint-Y/apps/32/firefox.png",
+      "firefox %u"
     ],
     "7": [
-      7,
-      "/home/kali/Im\u00e1genes/AppIcons/123.ico",
-      "/home/kali",
+      "/usr/share/icons/Mint-Y/apps/32/google-chrome.png",
+      "/usr/bin/google-chrome-stable %U"
+    ]
+  },
+  "commands": {
+    "1": [
+      1,
+      "/home/hallen/Pictures/go-home.png",
+      "/home/hallen",
       true
     ],
-    "8": [
-      8,
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/3d_systempreferences_folder_20519.ico",
-      "/media/kali/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000",
+    "2": [
+      2,
+      "/media/hallen/7AB20E9EB20E5F4F/0000000000Hallen/IMG_201611332_073152.jpg",
+      "/media/hallen/7AB20E9EB20E5F4F/0000000000Hallen",
+      true
+    ],
+    "3": [
+      3,
+      "/media/hallen/7AB20E9EB20E5F4F/0000000000Hallen/1 0000000/09 personalizac\u00f3n/image/iconos/iconos/black/Download_icon-icons.com_75235.ico",
+      "/media/hallen/Disco local/Users/Hallen/Downloads",
       true
     ]
   }

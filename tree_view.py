@@ -138,7 +138,7 @@ class TreeViewlist:
         self.tree.selection_add(self.item)
 
     def f12(self, function):
-        self.tree.bind("<Control-F12>", function)
+        self.tree.bind("<F12>", function)
 
     def add_data(self, data):
         a = 0

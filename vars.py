@@ -8,6 +8,13 @@ green = "#00ff00"
 gray = "#2c2c2c"
 soft_gray = "#999999"
 
+# all the paths that we have been open in left frame
+opened_left_paths = []
+opened_left_forward = []
+# all the path that we have been open in right frame
+opened_right_paths = []
+opened_right_forward = []
+
 tree_view_background = "black"
 tree_view_foreground = "white"
 tree_view_fieldbackground = "black"

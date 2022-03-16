@@ -16,10 +16,10 @@ import vars
 
 class VerticalBarCommands:
     def __init__(self, center_frame, listar_r, listar_l, left_path, right_path):
-        f = open ("preferences.json")
-        c = f.read ()
-        f.close ()
-        js = json.loads (c)
+        f = open("preferences.json")
+        c = f.read()
+        f.close()
+        js = json.loads(c)
         self.center_frame = center_frame
         self.commands = js["commands"]
         self.image_array = []
@@ -35,20 +35,20 @@ class VerticalBarCommands:
 
     @staticmethod
     def executes(over):
-        subprocess.run (over + " &", shell=True)
+        subprocess.run(over + " &", shell=True)
 
     def command(self):
-        if len (self.commands) != 0:
-            for i in range (len (self.commands)):
-                if not str (i + 1) in self.commands:
+        if len(self.commands) != 0:
+            for i in range(len(self.commands)):
+                if not str(i + 1) in self.commands:
                     i = i + 1
                 try:
-                    if self.commands[str (i + 1)] == "":
-                        self.image_array.insert (i, "")
+                    if self.commands[str(i + 1)] == "":
+                        self.image_array.insert(i, "")
                         continue
                 except KeyError:
                     continue
-                e = self.commands[str (i + 1)]
+                e = self.commands[str(i + 1)]
                 row = e[0]
                 image_path = e[1]
                 self.index_array.append(i)
@@ -85,35 +85,35 @@ class VerticalBarCommands:
             listar = self.listar_r
             label = self.right_path
 
-        name = Path (order).name
-        listar.listar (label, str (name), order)
+        name = Path(order).name
+        listar.listar(label, str(name), order)
 
     def menu_popup(self, event):
         widget = event.widget
-        text = widget.cget ("text")
+        text = widget.cget("text")
 
         def eliminar():
-            widget.destroy ()
+            widget.destroy()
 
-            f = open ("preferences.json", "r")
-            c = f.read ()
-            f.close ()
-            js = json.loads (c)
+            f = open("preferences.json", "r")
+            c = f.read()
+            f.close()
+            js = json.loads(c)
             commands = js["commands"]
-            for i in range (len (commands)):
-                if str (i + 1) == text:
-                    del js["commands"][str (i + 1)]
+            for i in range(len(commands)):
+                if str(i + 1) == text:
+                    del js["commands"][str(i + 1)]
 
-            s = json.dumps (js, indent=4)
-            f = open ("preferences.json", "w")
-            f.write (s)
-            f.close ()
+            s = json.dumps(js, indent=4)
+            f = open("preferences.json", "w")
+            f.write(s)
+            f.close()
 
         def edit():
-            f = open ("preferences.json", "r")
-            c = f.read ()
-            f.close ()
-            js = json.loads (c)
+            f = open("preferences.json", "r")
+            c = f.read()
+            f.close()
+            js = json.loads(c)
             commands = js["commands"]
             texto = ""
             foto = []
@@ -132,99 +132,99 @@ class VerticalBarCommands:
         menu.tk_popup(event.x_root, event.y_root)
 
     def edit_message(self, texto, foto, indice, widget):
-        top = Toplevel (self.center_frame, bg="black")
+        top = Toplevel(self.center_frame, bg="black")
 
         # ---------------------
         def openfile():
-            self.image_path = filedialog.askopenfilename (title="Escoje un Icono", initialdir=vars.actual_left_path,
-                                                          filetypes=(("Imagenes", ".png", ".jpg"), ("All", "*.*")))
+            self.image_path = filedialog.askopenfilename(title="Escoje un Icono", initialdir=vars.actual_left_path,
+                                                         filetypes=(("Imagenes", ".png", ".jpg"), ("All", "*.*")))
             if self.image_path:
-                top.lift ()
+                top.lift()
             else:
                 self.image_path = foto[0]
-                top.destroy ()
+                top.destroy()
 
         # ---------------------
-        top.resizable (False, False)
-        top.geometry ('300x120')
-        frame = Frame (top, borderwidth=1, highlightthickness=1, highlightcolor=vars.soft_gray, bg="black")
-        frame.pack (pady=10, padx=10, fill=BOTH)
-        entry = Entry (frame, bg=vars.soft_gray)
-        entry.insert (0, texto)
+        top.resizable(False, False)
+        top.geometry('300x120')
+        frame = Frame(top, borderwidth=1, highlightthickness=1, highlightcolor=vars.soft_gray, bg="black")
+        frame.pack(pady=10, padx=10, fill=BOTH)
+        entry = Entry(frame, bg=vars.soft_gray)
+        entry.insert(0, texto)
 
         # ..........................................................................
 
         # ---------------------
         def close():
-            top.destroy ()
+            top.destroy()
 
         def aceptar():
-            create_item (None)
+            create_item(None)
 
         # ---------------------
 
         def create_item(e):
             try:
-                order = entry.get ()
+                order = entry.get()
                 if self.image_path == "":
-                    image = Image.open (foto[0])
+                    image = Image.open(foto[0])
                 else:
-                    image = Image.open (self.image_path)
+                    image = Image.open(self.image_path)
 
-                img = image.resize ((35, 35), Image.ANTIALIAS)
-                self.foto_array.append (ImageTk.PhotoImage (img))
+                img = image.resize((35, 35), Image.ANTIALIAS)
+                self.foto_array.append(ImageTk.PhotoImage(img))
                 rows = indice
-                item = Label (master=self.center_frame, image=self.foto_array[0], height=35, width=35,
-                              text=str (indice), bg=vars.soft_gray)
+                item = Label(master=self.center_frame, image=self.foto_array[0], height=35, width=35,
+                             text=str(indice), bg=vars.soft_gray)
 
                 def execute(event):
 
-                    if self.link_array[indice - 1] == True:
-                        self.open_link (self.order_array[indice - 1])
+                    if self.link_array[indice - 1]:
+                        self.open_link(self.order_array[indice - 1])
                     else:
-                        subprocess.run (order + " &", shell=True)
+                        subprocess.run(order + " &", shell=True)
 
                 def _menu(event):
-                    class_ = VerticalBarCommands (self.center_frame, self.listar_r, self.listar_l, self.left_path,
-                                                  self.right_path)
-                    class_.menu_popup (event)
+                    class_ = VerticalBarCommands(self.center_frame, self.listar_r, self.listar_l, self.left_path,
+                                                 self.right_path)
+                    class_.menu_popup(event)
 
-                item.bind ('<Button-1>', execute)
-                item.bind ('<Button-3>', _menu)
-                widget.destroy ()
-                item.grid (column=0, row=rows)
+                item.bind('<Button-1>', execute)
+                item.bind('<Button-3>', _menu)
+                widget.destroy()
+                item.grid(column=0, row=rows)
 
                 # Ahora procedemos a guardar la configuracion de este comando en un json
-                f = open ("preferences.json", "r")
-                c = f.read ()
-                f.close ()
-                js = json.loads (c)
-                e = js["commands"][str (indice)][3]
+                f = open("preferences.json", "r")
+                c = f.read()
+                f.close()
+                js = json.loads(c)
+                e = js["commands"][str(indice)][3]
                 if self.image_path == "":
                     data = [rows, foto[0], order, e]
                 else:
                     data = [rows, self.image_path, order, e]
 
-                js["commands"][str (rows)] = data
-                s = json.dumps (js, indent=4)
-                f = open ("preferences.json", "w")
-                f.write (s)
+                js["commands"][str(rows)] = data
+                s = json.dumps(js, indent=4)
+                f = open("preferences.json", "w")
+                f.write(s)
             except  PIL.UnidentifiedImageError:
-                print ("El archivo no es una imagen valida")
+                print("El archivo no es una imagen valida")
             finally:
-                close ()
+                close()
 
         # ..........................................................................
-        entry.bind ('<Return>', create_item)
-        entry.focus ()
-        entry.grid (row=0, column=0, padx=10, pady=10)
-        button = Button (frame, text="Open", command=openfile)
-        button.grid (row=0, column=1, padx=10, pady=10)
-        close_frame = Frame (top, bg="black")
-        close_frame.pack (fill="x", padx=13)
-        cancelar = Button (close_frame, text="Cancelar", command=close)
-        cancelar.pack (side='left')
-        aceptar = Button (close_frame, text="Aceptar", command=aceptar)
-        aceptar.pack (side='right')
+        entry.bind('<Return>', create_item)
+        entry.focus()
+        entry.grid(row=0, column=0, padx=10, pady=10)
+        button = Button(frame, text="Open", command=openfile)
+        button.grid(row=0, column=1, padx=10, pady=10)
+        close_frame = Frame(top, bg="black")
+        close_frame.pack(fill="x", padx=13)
+        cancelar = Button(close_frame, text="Cancelar", command=close)
+        cancelar.pack(side='left')
+        aceptar = Button(close_frame, text="Aceptar", command=aceptar)
+        aceptar.pack(side='right')
 # ----------------------------------------------------------------------------------------------------------------------
 # ----------------------------------------------------------------------------------------------------------------------

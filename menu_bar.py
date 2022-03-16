@@ -2,10 +2,13 @@
 from tkinter import Menu, FLAT
 
 import vars
+from menu_bar_functions import open_terminal
 
 
 class _Menu:
-    def __init__(self, root, name_of_the_app):
+    def __init__(self, root, name_of_the_app, left_frame_list, right_frame_list):
+        self.left_frame_list = left_frame_list
+        self.right_frame_list = right_frame_list
         self.menu = Menu(root, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
                          fg="black", activeforeground="green", activebackground=vars.dark_gray, type="menubar")
         self.menu.config(bg=vars.soft_gray, bd=0, relief=FLAT, activeborderwidth=0)
@@ -50,8 +53,11 @@ class _Menu:
         # Menu Herramientas
         menu_herramientas = Menu(self.menu, tearoff=0, bd=10, relief=FLAT, bg=vars.dark_gray, fg="white",
                                  activeforeground="green", activebackground=vars.dark_gray)
-        menu_herramientas.add_command(label="Abrir una terminal aqui")
-        menu_herramientas.add_command(label="Abrir una terminal como administrador")
+        menu_herramientas.add_command(label="Abrir una terminal aquí",
+                                      command=lambda: open_terminal(self.left_frame_list.tree))
+
+        menu_herramientas.add_command(label="Abrir una terminal como administrador",
+                                      command=lambda: open_terminal(self.left_frame_list.tree, True))
         menu_herramientas.add_command(label="Abrir " + name_of_the_app + " como administrador")
 
         # Menu preferencias

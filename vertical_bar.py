@@ -27,14 +27,14 @@ class VerticalBar:
 
     def open_link(self, event, order):
         left = vars.selection_left
-        if left == True:
+        if left:
             label = self.left_path
             listar = self.listar_l
         else:
             label = self.right_path
             listar = self.listar_r
-        name = Path (order).name
-        listar.listar (label, name, order)
+        name = Path(order).name
+        listar.listar(label, name, order)
 
     def start(self, event):
         menu = Menu(self.vertical_frame, tearoff=False, relief=FLAT, bd=9, bg=vars.dark_gray,
@@ -44,155 +44,155 @@ class VerticalBar:
         menu.tk_popup(event.x_root, event.y_root)
 
     def command(self, link=False):
-        self.top = Toplevel (self.vertical_frame, bg="black")
-        self.top.resizable (False, False)
-        self.top.geometry ('300x120')
-        frame = Frame (self.top, borderwidth=1, highlightthickness=1, highlightcolor=vars.soft_gray, bg="black")
-        frame.pack (pady=10, padx=10, fill=BOTH)
-        self.entry = Entry (frame, bg=vars.soft_gray)
+        self.top = Toplevel(self.vertical_frame, bg="black")
+        self.top.resizable(False, False)
+        self.top.geometry('300x120')
+        frame = Frame(self.top, borderwidth=1, highlightthickness=1, highlightcolor=vars.soft_gray, bg="black")
+        frame.pack(pady=10, padx=10, fill=BOTH)
+        self.entry = Entry(frame, bg=vars.soft_gray)
 
         if link:
             self.entry.bind('<Return>', self.create_link)
         else:
-            self.entry.bind ('<Return>', self.create_item)
-        self.entry.focus ()
-        self.entry.grid (row=0, column=0, padx=10, pady=10)
-        button = Button (frame, text="Open", command=self.openfile)
-        button.grid (row=0, column=1, padx=10, pady=10)
-        close_frame = Frame (self.top, bg="black")
-        close_frame.pack (fill="x", padx=13)
-        cancelar = Button (close_frame, text="Cancelar", command=self.close)
-        cancelar.pack (side='left')
+            self.entry.bind('<Return>', self.create_item)
+        self.entry.focus()
+        self.entry.grid(row=0, column=0, padx=10, pady=10)
+        button = Button(frame, text="Open", command=self.openfile)
+        button.grid(row=0, column=1, padx=10, pady=10)
+        close_frame = Frame(self.top, bg="black")
+        close_frame.pack(fill="x", padx=13)
+        cancelar = Button(close_frame, text="Cancelar", command=self.close)
+        cancelar.pack(side='left')
 
         if link:
             aceptar = Button(close_frame, text="Aceptar", command=self.aceptar_link)
         else:
-            aceptar = Button (close_frame, text="Aceptar", command=self.aceptar)
-        aceptar.pack (side='right')
+            aceptar = Button(close_frame, text="Aceptar", command=self.aceptar)
+        aceptar.pack(side='right')
 
     def close(self):
-        self.top.destroy ()
+        self.top.destroy()
 
     def aceptar(self):
-        self.create_item (None)
+        self.create_item(None)
 
     def aceptar_link(self):
-        self.create_link (None)
+        self.create_link(None)
 
     def create_link(self, event, out=False, path=""):
         try:
             if out:
                 order = path
             else:
-                order = self.entry.get ()
-            image = Image.open (self.folder_path)
-            image.thumbnail ((35, 35), Image.ANTIALIAS)
-            self.imagen = ImageTk.PhotoImage (image)
-            rows = self.vertical_frame.grid_size ()[1]
-            item = Label (master=self.vertical_frame, image=self.imagen, height=35, width=35, text=str (rows),
-                          bg=vars.soft_gray)
+                order = self.entry.get()
+            image = Image.open(self.folder_path)
+            image.thumbnail((35, 35), Image.ANTIALIAS)
+            self.imagen = ImageTk.PhotoImage(image)
+            rows = self.vertical_frame.grid_size()[1]
+            item = Label(master=self.vertical_frame, image=self.imagen, height=35, width=35, text=str(rows),
+                         bg=vars.soft_gray)
 
             def execute_link(event):
-                self.open_link (event, order)
+                self.open_link(event, order)
 
-            item.bind ('<Button-1>', execute_link)
+            item.bind('<Button-1>', execute_link)
 
             def _menu(event):
-                class_ = VerticalBarCommands (self.vertical_frame, self.listar_r, self.listar_l, self.left_path,
-                                              self.right_path)
-                class_.menu_popup (event)
+                class_ = VerticalBarCommands(self.vertical_frame, self.listar_r, self.listar_l, self.left_path,
+                                             self.right_path)
+                class_.menu_popup(event)
 
-            item.bind ('<Button-3>', _menu)
-            item.grid (column=0, row=rows)
+            item.bind('<Button-3>', _menu)
+            item.grid(column=0, row=rows)
 
-            f = open ("preferences.json", "r")
-            c = f.read ()
-            f.close ()
-            js = json.loads (c)
+            f = open("preferences.json", "r")
+            c = f.read()
+            f.close()
+            js = json.loads(c)
             data = [rows, self.folder_path, order, True]
-            js["commands"][str (rows)] = data
-            s = json.dumps (js, indent=4)
-            f = open ("preferences.json", "w")
-            f.write (s)
+            js["commands"][str(rows)] = data
+            s = json.dumps(js, indent=4)
+            f = open("preferences.json", "w")
+            f.write(s)
         except PIL.UnidentifiedImageError:
-            print ("El archivo no es una imagen valida")
+            print("El archivo no es una imagen valida")
         finally:
             if not out:
-                self.close ()
+                self.close()
 
     def create_item(self, e):
         try:
-            order = self.entry.get ()
-            image = Image.open (self.image_path)
-            img = image.resize ((35, 35), Image.ANTIALIAS)
-            self.imagen = ImageTk.PhotoImage (img)
-            rows = self.vertical_frame.grid_size ()[1]
-            item = Label (master=self.vertical_frame, image=self.imagen, height=35, width=35, text=str (rows),
-                          bg=vars.soft_gray)
+            order = self.entry.get()
+            image = Image.open(self.image_path)
+            img = image.resize((35, 35), Image.ANTIALIAS)
+            self.imagen = ImageTk.PhotoImage(img)
+            rows = self.vertical_frame.grid_size()[1]
+            item = Label(master=self.vertical_frame, image=self.imagen, height=35, width=35, text=str(rows),
+                         bg=vars.soft_gray)
 
             def execute(event):
-                subprocess.run (order + " &", shell=True)
+                subprocess.run(order + " &", shell=True)
 
-            item.bind ('<Button-1>', execute)
+            item.bind('<Button-1>', execute)
 
             def _menu(event):
-                class_ = VerticalBarCommands (self.vertical_frame, self.listar_r, self.listar_l, self.left_path,
-                                              self.right_path)
-                class_.menu_popup (event)
+                class_ = VerticalBarCommands(self.vertical_frame, self.listar_r, self.listar_l, self.left_path,
+                                             self.right_path)
+                class_.menu_popup(event)
 
-            item.bind ('<Button-3>', _menu)
-            item.grid (column=0, row=rows)
+            item.bind('<Button-3>', _menu)
+            item.grid(column=0, row=rows)
 
             # Ahora procedemos a guardar la configuracion de este comando en un json
-            f = open ("preferences.json", "r")
-            c = f.read ()
-            f.close ()
-            js = json.loads (c)
-            print (str (rows))
+            f = open("preferences.json", "r")
+            c = f.read()
+            f.close()
+            js = json.loads(c)
+            print(str(rows))
             data = [rows, self.image_path, order, False]
-            js["commands"][str (rows)] = data
-            s = json.dumps (js, indent=4)
-            f = open ("preferences.json", "w")
-            f.write (s)
+            js["commands"][str(rows)] = data
+            s = json.dumps(js, indent=4)
+            f = open("preferences.json", "w")
+            f.write(s)
         except PIL.UnidentifiedImageError:
-            print ("El archivo no es una imagen valida")
+            print("El archivo no es una imagen valida")
         finally:
-            self.close ()
+            self.close()
 
     def openfile(self):
         if self.left:
             dire = vars.actual_left_path
         else:
             dire = vars.actual_right_path
-        file = filedialog.askopenfilename (title="Escoje un Icono", initialdir=dire,
-                                           filetypes=(("Imagenes", ".png", ".jpg"), ("All", "*.*")))
+        file = filedialog.askopenfilename(title="Escoje un Icono", initialdir=dire,
+                                          filetypes=(("Imagenes", ".png", ".jpg"), ("All", "*.*")))
         if file:
             self.image_path = file
-            self.top.lift ()
+            self.top.lift()
         else:
-            self.top.destroy ()
+            self.top.destroy()
 
     def initialize(self, imagen):
-        f = open ("preferences.json", "r")
-        c = f.read ()
-        f.close ()
-        js = json.loads (c)
+        f = open("preferences.json", "r")
+        c = f.read()
+        f.close()
+        js = json.loads(c)
         commands = js["commands"]
-        if len (commands) != 0:
-            for i in range (len (commands)):
-                e = commands[str (i + 1)]
+        if len(commands) != 0:
+            for i in range(len(commands)):
+                e = commands[str(i + 1)]
                 row = e[0]
                 image_path = e[1]
                 order = e[2]
-                print (order)
+                print(order)
 
-                image = Image.open (image_path)
-                img = image.resize ((35, 35), Image.ANTIALIAS)
-                self.imagen = ImageTk.PhotoImage (img)
-                item = Label (master=self.vertical_frame, image=self.imagen, height=35, width=35, bg=vars.soft_gray)
+                image = Image.open(image_path)
+                img = image.resize((35, 35), Image.ANTIALIAS)
+                self.imagen = ImageTk.PhotoImage(img)
+                item = Label(master=self.vertical_frame, image=self.imagen, height=35, width=35, bg=vars.soft_gray)
 
                 def execute(event):
-                    subprocess.run (order + " &", shell=True)
+                    subprocess.run(order + " &", shell=True)
 
-                item.bind ('<Button-1>', execute)
-                item.grid (column=0, row=row)
+                item.bind('<Button-1>', execute)
+                item.grid(column=0, row=row)

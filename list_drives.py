@@ -37,7 +37,7 @@ class Drives:
         self.listar_unused(self.unused_block_devices)
 
     def listar_unused(self, path):
-        print(path)
+        pass
 
     def get_size(self, path):
         name = self.find_sdiskpart(path).device
@@ -71,7 +71,8 @@ class Drives:
             self.label_right_d.config(text="Libre: " + disponible)
             self.listar_r.listar(self.right_path, "", path)
 
-    def find_sdiskpart(self, path):
+    @staticmethod
+    def find_sdiskpart(path):
         path = os.path.abspath(path)
         while not os.path.ismount(path):
             path = os.path.dirname(path)
@@ -82,7 +83,8 @@ class Drives:
 
         raise psutil.Error
 
-    def get_type(self, name):
+    @staticmethod
+    def get_type(name):
         df = os.popen("lsblk -do name,rm,tran")
 
         for lines in df.readlines():
@@ -124,7 +126,7 @@ class Drives:
         for blockdev_stat in glob.glob('/sys/block/*/stat'):
             blockdev_dir = blockdev_stat.rsplit('/', 1)[0]
             found_parts = False
-            for part_stat in glob.glob(blockdev_dir + '/*/stat'):
+            for _ in glob.glob(blockdev_dir + '/*/stat'):
                 yield blockdev_stat.rsplit('/', 2)[-2]
                 found_parts = True
             if not found_parts:

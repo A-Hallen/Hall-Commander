@@ -12,11 +12,11 @@ class Actualizar:
         self.right_path = right_path
 
     def update_left(self):
-        self.listar_l.listar (self.left_path, "", vars.actual_left_path)
+        self.listar_l.listar(self.left_path, "", vars.actual_left_path)
 
     def update_right(self):
-        self.listar_r.listar (self.right_path, "", vars.actual_right_path)
+        self.listar_r.listar(self.right_path, "", vars.actual_right_path)
 
     def update(self):
-        threading.Thread (target=self.update_right).start ()
-        threading.Thread (target=self.update_left).start ()
+        threading.Thread(target=self.update_right).start()
+        threading.Thread(target=self.update_left).start()
