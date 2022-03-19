@@ -29,8 +29,10 @@ last_selection_right = 0
 # Show hiden files or not
 show_hiden_files = True
 # Actual path in were we are on both frames, left and right
-actual_left_path = os.getenv ('HOME')
-actual_right_path = os.getenv ('HOME')
+actual_left_path = os.getenv('HOME')
+actual_right_path = os.getenv('HOME')
+
+scroll_speed = 1
 
 # variable for changing the hidden state
 hidden = True

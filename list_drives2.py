@@ -84,18 +84,15 @@ class Drives:
             self.label_right_d.config(text="Libre: " + disponible)
             self.listar_r.listar(self.right_path, "", path)
 
-    def list_or_mount(self, name, index, left=True):
+    def list_or_mount(self, name, left=True):
         device = self.dict_of_devices[name]
-        if device[2] != "":
-            if device[1] == "mtp":
-                self.listar_movile(device[2], left)
+        if device[5] != "":
+            if device[3] == "movil":
+                self.listar_movile(device[5], left)
             else:
-                self.listar_(device[2], left)
+                self.listar_(device[5], left)
         else:
-            if device[1] == "mtp":
-                self.mount_mtp(device, name, index, left)
-            else:
-                self.mount_(device, name, index, left)
+            self.mount_(device, name, left)
 
     def start(self):
         for index, name in enumerate(self.dict_of_devices):  # We iterate in this dictionary
@@ -110,17 +107,17 @@ class Drives:
                         "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"]
 
             mounted = False
-            tipo = device[1]  # Here we get the type (The Bus system)
-            if device[2] != "":
+            tipo = device[3]  # Here we get the type (The Bus system)
+            if device[5] != "":
                 mounted = True
             image = self.photo[self.get_image(tipo, mounted)]
             button_l = Button(fram_l, image=image, bg=soft_gray, bd=0, highlightthickness=0, takefocus=False)
             button_r = Button(fram_r, image=image, bg=soft_gray, bd=0, highlightthickness=0, takefocus=False)
 
-            button_l.bind("<Button-1>", lambda event, ind=index, n=name: self.list_or_mount(n, ind))
-            button_l.bind("<Button-3>", lambda event, n=name, ind=index: self.add_menu(event, n, ind))
-            button_r.bind("<Button-1>", lambda event, i=False, ind=index, n=name: self.list_or_mount(n, ind, i))
-            button_r.bind("<Button-3>", lambda event, n=name, ind=index: self.add_menu(event, n, ind, False))
+            button_l.bind("<Button-1>", lambda event, n=name: self.list_or_mount(n))
+            button_l.bind("<Button-3>", lambda event, n=name: self.add_menu(event, n))
+            button_r.bind("<Button-1>", lambda event, i=False, n=name: self.list_or_mount(n, i))
+            button_r.bind("<Button-3>", lambda event, n=name: self.add_menu(event, n, False))
             button_l.grid(row=0, column=0)
             button_r.grid(row=0, column=0)
             label_l = Label(fram_l, text=str(alphabet[index]), bg=soft_gray, takefocus=False)
@@ -128,15 +125,15 @@ class Drives:
             label_l.grid(row=0, column=1)
             label_r.grid(row=0, column=1)
 
-    def add_menu(self, event, name, index, left=True):
+    def add_menu(self, event, name, left=True):
         device = self.dict_of_devices[name]
         boton: Button = event.widget
         menu = Menu(master=boton, tearoff=False, relief=FLAT, bd=9, bg=dark_gray,
                     fg="white", activeforeground="green", activebackground=dark_gray)
 
-        menu.add_command(label="Desmontar", command=lambda dev=device, ind=index: self.umount(dev, name, ind, left))
-        if device[4]:
-            menu.add_command(label="Expulsar", command=lambda dev=device, ind=index: self.eject(dev, name, ind))
+        menu.add_command(label="Desmontar", command=lambda e, dev=device: self.umount(dev, name, left))
+        if device[3] == 'usb':
+            menu.add_command(label="Expulsar", command=lambda e, dev=device: self.eject(dev, name))
 
         menu.tk_popup(event.x_root, event.y_root)
 
@@ -151,36 +148,37 @@ class Drives:
                 image = 2
             else:
                 image = 3
-        elif tipo == "mtp":
+        elif tipo == "movil":
             if mounted:
                 image = 4
             else:
                 image = 5
         return image
 
-    def eject(self, device, name, index):
-        full_name = device[3]
+    def eject(self, device, name):
+        print(device)
+        full_name = device[6]
         try:
             os.system("pkexec eject " + full_name)
             del self.dict_of_devices[name]
-            self.drive_left.winfo_children()[index].destroy()
-            self.drive_right.winfo_children()[index].destroy()
-            if device[3] in vars.actual_left_path:
+            self.drive_left.winfo_children()[device[0]].destroy()
+            self.drive_right.winfo_children()[device[0]].destroy()
+            if device[5] in vars.actual_left_path:
                 self.listar_(os.getenv("HOME"), True)
-            if device[3] in vars.actual_right_path:
+            if device[5] in vars.actual_right_path:
                 self.listar_(os.getenv("HOME"), False)
         except Exception as e:
             print("eject function " + str(e))
 
-    def umount(self, device, name, index, left):
-        full_name = device[3]
+    def umount(self, device, name, left):
+        full_name = device[6]
         try:
             os.system("pkexec umount " + full_name)
-            self.dict_of_devices[name][2] = ""
-            self.drive_left.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], False)])
-            self.drive_right.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], False)])
+            self.dict_of_devices[name][5] = ""
+            self.drive_left.winfo_children()[device[0]].winfo_children()[0].config(
+                image=self.photo[self.get_image(device[3], False)])
+            self.drive_right.winfo_children()[device[0]].winfo_children()[0].config(
+                image=self.photo[self.get_image(device[3], False)])
             if left:
                 if os.path.exists(vars.actual_left_path):
                     self.listar_(vars.actual_left_path, left)
@@ -195,61 +193,28 @@ class Drives:
         except Exception as e:
             print("umount function " + str(e))
 
-        full_name = device[3]
-        try:
-            os.system("pkexec umount " + full_name)
-            self.dict_of_devices[name][2] = ""
-            self.drive_left.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], False)])
-            self.drive_right.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], False)])
-            if left:
-                if os.path.exists(vars.actual_left_path):
-                    self.listar_(vars.actual_left_path, left)
-                else:
-                    self.listar_(os.getenv("HOME", left))
-            else:
-                if os.path.exists(vars.actual_right_path):
-                    self.listar_(vars.actual_right_path, left)
-                else:
-                    self.listar_(os.getenv("HOME"), left)
-
-        except Exception as e:
-            print("umount function " + str(e))
-
-    def mount_(self, device, name, index, left):
-        full_name = device[3]
+    def mount_(self, device, name, left):
+        full_name = device[6]
+        print(device)
+        print("mounting... ")
         user = os.getenv("USER")
         mount_point = os.path.join("/media", user)
-        new = os.path.join(mount_point, device[0])
+        if device[4] != "":
+            new = os.path.join(mount_point, device[4])
+        else:
+            new = os.path.join(mount_point, name)
         try:
             os.system("pkexec sh -c 'mkdir -p " + new + " && mount " + full_name + " " + new + "'")
-            self.dict_of_devices[name][2] = new
-            self.drive_left.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], True)])
-            self.drive_right.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], True)])
+            self.dict_of_devices[name][5] = new
+            print("Device " + name + " mounted at " + new)
+            self.drive_left.winfo_children()[device[0]].winfo_children()[0].config(
+                image=self.photo[self.get_image(device[3], True)])
+            self.drive_right.winfo_children()[device[0]].winfo_children()[0].config(
+                image=self.photo[self.get_image(device[3], True)])
             self.listar_(new, left)
+
         except Exception as e:
             print("mount_ function " + str(e))
-
-    def mount_mtp(self, device, name, index, left):
-        from pathlib import Path
-        # '372 GB Volume': ['7AB20E9EB20E5F4F', 'ata', '/media/hallen/sda3', '/dev/sda3', False]
-        mount_path = os.path.join(os.path.join('/run/user/', str(os.getuid())), 'gvfs/')
-        new = os.path.join(mount_path, "mtp:host=" + Path(device[5]).name)
-
-        try:
-            print(new)
-            os.system("pkexec sh -c 'mkdir -p " + new + " && mount " + device[3] + " " + new + "'")
-            self.dict_of_devices[name][2] = new
-            self.drive_left.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], True)])
-            self.drive_right.winfo_children()[index].winfo_children()[0].config(
-                image=self.photo[self.get_image(device[1], True)])
-            self.listar_(new, left)
-        except Exception as e:
-            print("mount_mtp function " + str(e))
 
     def monitoring(self):
         pass

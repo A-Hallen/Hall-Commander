@@ -84,6 +84,9 @@ class Load_Thumb:
     def load_async(self):
         photos = [".jpg", ".png", ".jpeg", ".ico"]
         videos = [".mp4", ".mpg", ".avi", ".rmvb", ".webm", ".mkv"]
+        img_ext = [".apk", ".zip", ".exe", ".rar", ".tar", ".tgz", ".gz"]
+        imagenes = ["android.png", "zip.ico", "exe.png", "rar.ico", "tar3.ico", "tgz2.ico", "tgz2.ico"]
+        music = ['pcm', 'wav', 'aiff', 'mp3', 'aac', 'ogg', 'wma', 'flac', 'alac', 'wma']
 
         while True:
             try:
@@ -108,7 +111,7 @@ class Load_Thumb:
                 if ext.lower() in photos:
                     try:
                         image = Image.open(path)
-                    except PIL.UnidentifiedImageError:
+                    except (PIL.UnidentifiedImageError, FileNotFoundError):
                         image = Image.open("resources/fotos.png")
 
                     if not vars.hidden:
@@ -124,12 +127,16 @@ class Load_Thumb:
                     except:
                         print("item in exception" + item)
                 elif ext.lower() in videos:
-                    clips = VideoFileClip(path)
-                    duration = clips.duration
-                    max_duration = int(duration) + 1
-                    i = max_duration // 2
-                    frame = clips.get_frame(i)
-                    image = Image.fromarray(frame)
+                    try:
+                        clips = VideoFileClip(path)
+                        duration = clips.duration
+                        max_duration = int(duration) + 1
+                        i = max_duration // 2
+                        frame = clips.get_frame(i)
+                        image = Image.fromarray(frame)
+                    except UnicodeDecodeError:
+                        image = Image.open("resources/video.ico")
+
                     image.thumbnail((30, 30), Image.ANTIALIAS)
                     blank = Image.new('RGBA', (36, 30))
                     blank.paste(image)
@@ -199,8 +206,10 @@ class Load_Thumb:
                     image.thumbnail((30, 30), Image.ANTIALIAS)
                     self.array.insert(int(item), ImageTk.PhotoImage(image))
                     self.tree.item(item, image=self.array[int(item)])
-                elif ext.lower() == ".apk":
-                    image = Image.open("resources/android.png")
+                elif ext.lower() in img_ext:
+                    index = img_ext.index(ext.lower())
+                    img = imagenes[index]
+                    image = Image.open("resources/" + img)
                     image.thumbnail((30, 30), Image.ANTIALIAS)
                     self.array.insert(int(item), ImageTk.PhotoImage(image))
                     self.tree.item(item, image=self.array[int(item)])

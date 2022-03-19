@@ -34,7 +34,7 @@ class Listar:
             self.class_tree.clear()  # Limpiamos el contenido del TreeView
             self.class_tree.add_data(lista_l)  # Añadimos los nuevos datos al treeView
             vars.actual_left_path = path  # Cambiamos la variable global actual_left_path que se encuentra en vars.py
-            if vars.opened_left_paths[len(vars.opened_left_paths) - 1] != path:
+            if vars.opened_left_paths[-1] != path:
                 vars.opened_left_paths.append(path)  # Añadimos el path a la lista de rutas que abrimos en la izquierda
             self.class_tree.tree.selection_add(0)
             self.class_tree.tree.focus(0)
@@ -56,7 +56,7 @@ class Listar:
             lista_l = self.listfiles.list(path)  # Obtenemos la lista de elementos que contiene esa carpeta
             self.class_tree.clear()  # Limpiamos el contenido del TreeView
             self.class_tree.add_data(lista_l)  # Añadimos los nuevos datos al treeView
-            if path != vars.opened_right_paths[len(vars.opened_right_paths) - 1]:
+            if path != vars.opened_right_paths[-1]:
                 vars.opened_right_paths.append(path)
             self.class_tree.tree.selection_add(0)
             self.class_tree.tree.focus(0)

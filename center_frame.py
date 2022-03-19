@@ -1,14 +1,16 @@
 import json
+import os.path
 import subprocess
 from pathlib import Path
 from tkinter import Label, Menu, Toplevel, Frame, BOTH, Entry, Button, filedialog, FLAT
 
 import PIL
 from PIL import Image, ImageTk
+from gi.repository import Gio
 
 import vars
 
-
+Gio.unix_is_system_device_path("/home/")
 # ----------------------------------------------------------------------------------------------------------------------
 # -------------------------------------Initialize the images of the central frame---------------
 # ----------------------------------------------------------------------------------------------------------------------
@@ -86,7 +88,8 @@ class VerticalBarCommands:
             label = self.right_path
 
         name = Path(order).name
-        listar.listar(label, str(name), order)
+        if os.path.exists(order):
+            listar.listar(label, str(name), order)
 
     def menu_popup(self, event):
         widget = event.widget

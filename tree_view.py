@@ -27,10 +27,10 @@ class TreeViewlist:
         style.layout("mystyle.Treeview", [('mystyle.Treeview.treearea', {'sticky': 'nswe'})])  # Remove the borders
 
         self.tree = Treeview(frame, style="mystyle.Treeview", padding=[0, 0, 0, 0])
-        scroll = Scrollbar(self.tree, bd=0, bg=vars.gray, troughcolor=vars.dark_gray, takefocus=False)
-        scroll.pack(side=RIGHT, fill="y", pady=27)
-        self.tree.config(yscrollcommand=scroll.set)
-        scroll.config(command=self.tree.yview)
+        self.scroll = Scrollbar(self.tree, bd=0, bg=vars.gray, troughcolor=vars.dark_gray, takefocus=False)
+        self.scroll.pack(side=RIGHT, fill="y", pady=27)
+        self.tree.config(yscrollcommand=self.scroll.set)
+        self.scroll.config(command=self.tree.yview)
         self.tree.tag_configure('even', foreground='green')
         self.tree.tag_configure('odd', background='#222222')
         self.tree['columns'] = ("Ext", "Tamaño")
@@ -130,6 +130,14 @@ class TreeViewlist:
     def a(self, function):
         self.tree.bind("<Key>", function)
 
+    # these are function that triggered when mousewheel is used,
+    # the default function of mousewheel isn't so client friendly like that
+    def scroll_(self, event):
+        if event.num == 4 or event.delta > 200:
+            self.tree.yview_scroll(0 - vars.scroll_speed, "units")
+        elif event.num == 5 or event.delta < -200:
+            self.tree.yview_scroll(vars.scroll_speed, "units")
+
     def drag(self, function):
         self.tree.bind("<B1-Motion>", function)
 
@@ -143,6 +151,12 @@ class TreeViewlist:
     def add_data(self, data):
         a = 0
         self.tree.bind("<B3-Motion>", self.drag_left)
+        self.tree.unbind_class("Treeview", "<ButtonPress-4>")
+        self.tree.unbind_class("Treeview", "<ButtonPress-5>")
+        self.tree.unbind_class("Treeview", "<MouseWheel>")
+        self.tree.bind("<ButtonPress-4>", self.scroll_)
+        self.tree.bind("<ButtonPress-5>", self.scroll_)
+        self.tree.bind("<MouseWheel>", self.scroll_)
 
         for record in data:
             self.tree.insert(parent='', image=record[4], index='end', iid=a, text=record[0],

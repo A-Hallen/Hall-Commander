@@ -1,7 +1,8 @@
 #! /usr/bin/python3
+import _tkinter
 import json
 from os.path import exists, isdir, join, splitext, abspath, ismount, dirname
-from time import sleep, time
+from time import sleep
 from tkinter import ttk, Tk, Frame, BOTH, LEFT, Label, W, Button, FLAT, Entry, Event, RIGHT, Menu
 
 from PIL import ImageTk, Image
@@ -148,7 +149,10 @@ def change_left(event):
     vars.selection_left = True
     vars.last_selection_right = right_frame_list.tree.focus()
     right_frame_list.tree.item(right_frame_list.tree.focus(), tags="odd")
-    left_frame_list.tree.item(vars.last_selection_left, tags="")
+    try:
+        left_frame_list.tree.item(vars.last_selection_left, tags="")
+    except _tkinter.TclError:
+        print("error in main.py change_left function, line ~ 156 item " + str(vars.last_selection_left) + " Not found")
     right_frame_list.tree.selection_remove(*right_frame_list.tree.get_children())
 
 
@@ -610,25 +614,12 @@ def initialize_image_menus():
                           bg=vars.soft_gray)
     label_right_d.grid(row=0, column=2)
 
-    image_disk = Image.open("resources/hd_hard.ico")
-    img_disk = image_disk.resize((20, 20), Image.ANTIALIAS)
-    image_usb = Image.open("resources/usb.ico")
-    img_usb = image_usb.resize((20, 20), Image.ANTIALIAS)
-    photo = [ImageTk.PhotoImage(img_disk), ImageTk.PhotoImage(img_usb)]
-    Drives(drive_left, drive_right, photo, label_left_t,
+    Drives(drive_left, drive_right, label_left_t,
            label_right_t, label_left_d, label_right_d,
            listar_l, listar_r, left_path, right_path)
 
-    image_array.insert(0, ImageTk.PhotoImage(Image.open("resources/borrar.png")
-                                             .resize((24, 24), Image.ANTIALIAS)))
-    image_array.insert(1, ImageTk.PhotoImage(Image.open("resources/cortar.png")
-                                             .resize((24, 24), Image.ANTIALIAS)))
-    image_array.insert(2, ImageTk.PhotoImage(Image.open("resources/copiar.png")
-                                             .resize((24, 24), Image.ANTIALIAS)))
-    image_array.insert(3, ImageTk.PhotoImage(Image.open("resources/propiedades.png")
-                                             .resize((24, 24), Image.ANTIALIAS)))
-    image_array.insert(4, ImageTk.PhotoImage(Image.open("resources/paste.ico")
-                                             .resize((24, 24), Image.ANTIALIAS)))
+    for i, imag in enumerate(["borrar.png", "cortar.png", "copiar.png", "propiedades.png", "paste.ico"]):
+        image_array.insert(i, ImageTk.PhotoImage(Image.open("resources/" + imag).resize((24, 24), Image.ANTIALIAS)))
 
 
 def vertical_thread():
@@ -668,7 +659,6 @@ def tool_bar_thread():
     # =========================------------------===========================----------------------==========================
 
 
-time_a = time()
 start()
 # Set the root window
 root = Tk()
@@ -817,7 +807,7 @@ right_frame_list.delete(lambda event: file_manipulation.delete_dialog(event, Fal
 right_frame_list.F5(lambda event: file_manipulation.copy_dialog(event, False))
 right_frame_list.f12(lambda event: f12(event, False))
 
-image_drag = Image.open("folder.ico")
+image_drag = Image.open("folder.png")
 photo_drag = ImageTk.PhotoImage(image_drag)
 canvas_drag = Label(image=photo_drag)
 
@@ -854,5 +844,4 @@ root.after_idle(set_geometry)
 root.after_idle(tool_bar_thread)
 root.after_idle(vertical_thread)
 root.after_idle(initialize_image_menus)
-print(time() - time_a)
 root.mainloop()

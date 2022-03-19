@@ -47,13 +47,13 @@ class ListFiles:
             ipath = os.path.join(path, lis)
             last = i
             if vars.hidden:
-                if not lis.startswith("."):
+                if not lis.startswith(".") and not lis.startswith("$"):
                     if os.path.isdir(ipath):
                         image = self.folder
                         lista.insert(i, (lis, "", "<DIR>", str(i), image))
             else:
                 if os.path.isdir(ipath):
-                    if lis.startswith("."):
+                    if lis.startswith(".") or lis.startswith("$"):
                         image = self.folder_hidden
                     else:
                         image = self.folder
@@ -67,7 +67,7 @@ class ListFiles:
             last = i + last
             self.array.insert(i, "")
             if vars.hidden:
-                if not lis.startswith("."):
+                if not lis.startswith(".") and not lis.startswith("$"):
                     if os.path.isfile(ipath):
                         image = self.desconocido
                         size = self.getsize(ipath)
